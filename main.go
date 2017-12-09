@@ -3,7 +3,7 @@ package main
 import "fmt"
 
 func main() {
-	bc := NewBlockChain("Genesis block")
+	bc := InitBlockchain()
 
 	bc.AddBlock("Doraemon send 1 btc to batman")
 	bc.AddBlock("Batman send 2 btc to superman")

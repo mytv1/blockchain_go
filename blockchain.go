@@ -1,11 +1,19 @@
 package main
 
+import "sync"
+
 type Blockchain struct {
 	blocks []*Block
 }
 
-func NewBlockChain(starting string) *Blockchain {
-	return &Blockchain{[]*Block{NewGenesisBlock(starting)}}
+var instantiated *Blockchain
+var once sync.Once
+
+func InitBlockchain() *Blockchain {
+	once.Do(func() {
+		instantiated = &Blockchain{[]*Block{NewGenesisBlock("Genesis block")}}
+	})
+	return instantiated
 }
 
 func (bc *Blockchain) AddBlock(data string) {
