@@ -1,19 +1,20 @@
 package main
 
-import (
-	"fmt"
-)
+import "fmt"
 
 func main() {
-	bc := NewBlockchain()
+	bc := NewBlockChain("Genesis block")
 
-	bc.AddBlock("Send 1 BTC to Ivan")
-	bc.AddBlock("Send 2 more BTC to Ivan")
+	bc.AddBlock("Doraemon send 1 btc to batman")
+	bc.AddBlock("Batman send 2 btc to superman")
+	bc.AddBlock("Batman send 1 btc to girls")
 
+	fmt.Println()
 	for _, block := range bc.blocks {
-		fmt.Printf("Prev. hash: %x\n", block.PrevBlockHash)
-		fmt.Printf("Data: %s\n", block.Data)
-		fmt.Printf("Hash: %x\n", block.Hash)
+		fmt.Printf("Hash : %x\n", block.Hash)
+		fmt.Printf("Data : %s\n", block.Data)
+		fmt.Printf("Timestamp : %x\n", block.Timestamp)
+		fmt.Printf("Previous Hash : %x\n", block.PrevBlockHash)
 		fmt.Println()
 	}
 }

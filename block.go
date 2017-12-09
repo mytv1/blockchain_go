@@ -7,31 +7,26 @@ import (
 	"time"
 )
 
-// Block keeps block headers
 type Block struct {
-	Timestamp     int64
-	Data          []byte
-	PrevBlockHash []byte
 	Hash          []byte
+	PrevBlockHash []byte
+	Data          []byte
+	Timestamp     int64
 }
 
-// SetHash calculates and sets block hash
 func (b *Block) SetHash() {
-	timestamp := []byte(strconv.FormatInt(b.Timestamp, 10))
-	headers := bytes.Join([][]byte{b.PrevBlockHash, b.Data, timestamp}, []byte{})
-	hash := sha256.Sum256(headers)
-
+	bTimeStamp := []byte(strconv.FormatInt(b.Timestamp, 10))
+	blockAsBytes := bytes.Join([][]byte{b.PrevBlockHash, b.Data, bTimeStamp}, []byte{})
+	hash := sha256.Sum256(blockAsBytes)
 	b.Hash = hash[:]
 }
 
-// NewBlock creates and returns Block
 func NewBlock(data string, prevBlockHash []byte) *Block {
-	block := &Block{time.Now().Unix(), []byte(data), prevBlockHash, []byte{}}
+	block := &Block{[]byte{}, prevBlockHash, []byte(data), time.Now().Unix()}
 	block.SetHash()
 	return block
 }
 
-// NewGenesisBlock creates and returns genesis Block
-func NewGenesisBlock() *Block {
-	return NewBlock("Genesis Block", []byte{})
+func NewGenesisBlock(starting string) *Block {
+	return NewBlock(starting, []byte{})
 }
