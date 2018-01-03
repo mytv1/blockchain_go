@@ -3,30 +3,64 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/json"
+	"fmt"
+	"os"
 	"strconv"
 	"time"
 )
 
 type Block struct {
-	Hash          []byte
-	PrevBlockHash []byte
-	Data          []byte
-	Timestamp     int64
+	Timestamp     int64  `json:"Timestamp"`
+	Data          []byte `json:"Data"`
+	PrevBlockHash []byte `json:"PrevBlockHash"`
+	Hash          []byte `json:"Hash"`
+}
+
+func (b Block) String() string {
+	var strBlock string
+	strBlock += fmt.Sprintf("Prev hash: %x\n", b.PrevBlockHash)
+	strBlock += fmt.Sprintf("Data: %s\n", b.Data)
+	strBlock += fmt.Sprintf("Hash: %x\n", b.Hash)
+	return strBlock
 }
 
 func (b *Block) SetHash() {
-	bTimeStamp := []byte(strconv.FormatInt(b.Timestamp, 10))
-	blockAsBytes := bytes.Join([][]byte{b.PrevBlockHash, b.Data, bTimeStamp}, []byte{})
-	hash := sha256.Sum256(blockAsBytes)
+	timestamp := []byte(strconv.FormatInt(b.Timestamp, 10))
+	headers := bytes.Join([][]byte{b.PrevBlockHash, b.Data, timestamp}, []byte{})
+	hash := sha256.Sum256(headers)
+
 	b.Hash = hash[:]
 }
 
 func NewBlock(data string, prevBlockHash []byte) *Block {
-	block := &Block{[]byte{}, prevBlockHash, []byte(data), time.Now().Unix()}
+	block := &Block{time.Now().Unix(), []byte(data), prevBlockHash, []byte{}}
 	block.SetHash()
 	return block
 }
 
-func NewGenesisBlock(starting string) *Block {
-	return NewBlock(starting, []byte{})
+func NewGenesisBlock() *Block {
+	return NewBlock("Genesis block", []byte{})
+}
+
+func (b *Block) Serialize() []byte {
+	data, err := json.Marshal(b)
+
+	if err != nil {
+		Error.Printf("Marshal block fail\n")
+		os.Exit(1)
+	}
+	return data
+}
+
+func DeserializeBlock(data []byte) *Block {
+	var b *Block = new(Block)
+	err := json.Unmarshal(data, b)
+
+	if err != nil {
+		Error.Printf("Unmarshal block fail\n")
+		os.Exit(1)
+	}
+
+	return b
 }

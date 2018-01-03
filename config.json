@@ -1,0 +1,11 @@
+{
+	"network": {
+		"local_node": {
+			"address": "localhost:3331"
+		},
+		"neighbor_nodes": [
+			{"address": "localhost:3332"},
+			{"address": "localhost:3333"}
+		]
+	}
+}
