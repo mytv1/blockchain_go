@@ -6,11 +6,10 @@ Fork from https://github.com/Jeiwan/blockchain_go
 
 This is part 1 of my articles about my blockchain's implement tutorial below :
 
-[Part 1: Basic prototype](!https://github.com/mytv1/blockchain_go/tree/part_1)
+1. [Basic prototype](https://github.com/mytv1/blockchain_go/tree/part_1)
+2. [Network](https://github.com/mytv1/blockchain_go/tree/part_2)
 
-[Part 2: Network](!https://github.com/mytv1/blockchain_go/tree/part_2)
-
-I'm not good at English. So forgive me if something make you hard to sunderstand.
+I'm not good at English. So forgive me if something make you hard to understand.
 
 I'm also new in Golang and Blockchain. So you can spot a lot of problems in my code, please feel free to correct it.
 
