@@ -22,15 +22,15 @@ I'm also new in Golang and Blockchain. So if you spot any problem in my code, pl
 - [References](#references)
 
 # Introduction
-In this article, we'll build a simple blockchain with a block structure.
-[comment]: <> (Sửa lại câu trên theo đúng ý)
+In this article, we'll build a blockchain with a simple structure
+
 When you run the program, the sample chain of blocks will be printed with its hash and its information.
 
 # Prerequisites
 (My local environment)
 
-OS : Ubuntu 16.04.2 LTS
-[comment]: <> (Thêm cài đặt go)
+- OS : Ubuntu 16.04.2 LTS
+- Go install : https://golang.org/doc/install
 
 ```
 $ go version
@@ -46,13 +46,12 @@ go build .
 Basic structure :
 
 ### Block
-[comment]: <> (Xem xét lại thay đổi thứ tự cho phù hợp :v)
 ```
 type Block struct {
 	Timestamp     int64
 	Data          []byte
+	Hash          []byte
 	PrevBlockHash []byte
-	Hash          []byte	
 }
 ```
 
@@ -81,9 +80,9 @@ type Blockchain struct {
 ```
 
 Blockchain structure is just array of Blocks, very simple. And with our purpose, to make a simple blockchain simulation, I think it's enough. Though, we can see at least 2 problems here:
-+ Memory storage : Currently bitcoin blockchain size is about 150GB, and we don't want to save something that large to memory. In my opinion, we can save it to files (databases). ~~We will mention it later~~. 
-[comment]: <> (Xem câu gạch ngang)
-+ PrevBlockHash wasted : With this structure, we can reference to previous block by indexing, therefore block's PrevBlockHash property may be wasted. But I think it's normal, and we can see its uses on future articles.
++ Memory storage : Currently bitcoin blockchain size is about 150GB, and we don't want to save something that large to memory. In my opinion, we can save it to files (databases). We will mention later.
+
++ PrevBlockHash wasted : With this structure, we can reference to previous block by indexing, therefore block's PrevBlockHash property may be wasted. We can see its uses on future articles.
 
 You may want to consider ethereum blockchain structure [here](https://github.com/ethereum/go-ethereum/blob/master/core/blockchain.go)
 
@@ -91,8 +90,6 @@ You may want to consider ethereum blockchain structure [here](https://github.com
 ```
 go test
 ```
-
-Enjoy!
 
 # References
 https://jeiwan.cc/posts/building-blockchain-in-go-part-1/
