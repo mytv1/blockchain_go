@@ -1,10 +1,7 @@
 # blockchain_go
 My simple implement of blockchain with Golang.
 
-Fork from https://github.com/Jeiwan/blockchain_go
-(Many thanks to Jeiwan!)
-
-This is part 1 of my articles about my blockchain's implement tutorial below :
+This is part 2 of my articles about my blockchain's implement tutorial below :
 
 1. [Basic prototype](https://github.com/mytv1/blockchain_go/tree/part_1)
 2. [Network](https://github.com/mytv1/blockchain_go/tree/part_2)
@@ -16,15 +13,21 @@ I'm also new in Golang and Blockchain. So if you spot any problem in my code, pl
 # Contents
 - [Introduction](#introduction)
 - [Prerequisites](#prerequisites)
+- [Install](#install)
 - [Running](#running)
-- [Program Structure](#structure)
-- [Testing](#testing)
+- [Program Structure](#program-structure)
 - [References](#references)
 
 # Introduction
-In this article, we'll build a blockchain with a simple structure
+In this article, we'll built a blockchain with very simple decentralized network.
 
-When you run the program, the sample chain of blocks will be printed with its hash and its information.
+Here are some things you can try with this part :
++ Run n node with shared blockchain
++ First started node will initialize its first block. Other nodes, when started, will pull blockchain from first connected node in network
++ Send command in json format to a node from command line by tcp. Here are two avaiable commands : "Add block" and "Print entire blockchain"
++ When a block is added in a node, it will be shared to others immediately. Therefore all blockchain in all node will be synchronized
+
+*Note : i implemented it with my basic knowledge about blockchain. So i'm not sure i did it properly. :)
 
 # Prerequisites
 (My local environment)
@@ -36,62 +39,126 @@ When you run the program, the sample chain of blocks will be printed with its ha
 $ go version
 go version go1.9.2 linux/amd64
 ```
+
+# Install
+```
+make deps
+make build
+```
+
 # Running
-```
-go build .
-./blockchain.go
+## Prepare 
+To make it works like a network, we need run each node independently. In example, you can prepare 3 nodes network's environment like this :
+
+```shell
+$tree
+# directory structure #
+├── node_1
+│   ├── config.json
+│   ├── simplebc
+│   └── samples (optional)
+│       ├── print.json
+│       └── addblock.json
+├── node_2
+│   ├── config.json
+│   ├── simplebc
+│   └── samples (optional)
+│       ├── print.json
+│       └── addblock.json
+└── node_3
+    ├── config.json
+    ├── simplebc
+    └── samples (optional)
+        ├── print.json
+        └── addblock.json
+
 ```
 
-# Structure
-Basic structure :
+* simplebc : executed file. May be you've built it with `make build` on install section above
+* config.json : information about your network.
+* samples (optional) : contains commands to a node. You can send command to a node by tcp to request it add a block, or print its own blockchain as you saw in part 1
 
-### Block
-```
-type Block struct {
-	Timestamp     int64
-	Data          []byte
-	Hash          []byte
-	PrevBlockHash []byte
+config.json on each node will look like below :
+
+```shell
+# configuration snippets #
+$ cat node_[123]/config.json
+{
+  "network": {
+    "local_node": {
+      "address": "localhost:3331"
+    },
+    "neighbor_nodes": [
+      {"address": "localhost:3332"},
+      {"address": "localhost:3333"}
+    ]
+  }
+}
+...
+{
+  "network": {
+    "local_node": {
+      "address": "localhost:3332"
+    },
+    "neighbor_nodes": [
+      {"address": "localhost:3331"},
+      {"address": "localhost:3333"}
+    ]
+  }
+}
+...
+{
+  "network": {
+    "local_node": {
+      "address": "localhost:3333"
+    },
+    "neighbor_nodes": [
+      {"address": "localhost:3331"},
+      {"address": "localhost:3332"}
+    ]
+  }
 }
 ```
 
-Block is the basic element of blockchain. In our example, I built it with basic properties.
-In practice, you can consider ethereum block structure [here](https://github.com/ethereum/go-ethereum/blob/master/core/types/block.go#L139)
+## Start network
 
-In my struct, we have :
-- Timestamp : timestamp when a block is created. I use `int64` because this type can be used to present Unix time.
+```shell
+# node_1
+./simplebc start
 
-- Data : for simple usage, its type may be `string` or anything else depend on our purposes. But with `[]byte`, we can handle it easily when we need encryption or json marshal.
+# node_2
+./simplebc start
 
-- Hash : We need a hash to "seal" this block. Hash is special mechanism in blockchain with many purposes : making difficulties to fake an unique block, "proof of work", easy validation... . We will mention it later. In our structure, hash is simple and just `sha256(Data + PrevBlockHash + Timestamp)`. About hash type,  i think `[]byte` is the most suitable, or we can consider `string`.
-
-- PrevBlockHash : Blockchain is a linked list of blocks. So each block will link to previous (created previously) block by saving a hash to it (its pointer in below diagram)
-![linked list](https://s3-eu-west-2.amazonaws.com/dotjsonimages/2017/06/ll-4.png)
-
-The first block has no pointer to its previous block, and is called **Genesis block**
-
-Notes: If you are wondering why we shouldn't add NextBlockHash (Seem like it will help us to iterate blocks easier, and blockchain will transform from singly linked list to doubly linked list), that's because of block's stability. As a block view,its previous block is stabler than its next one. With some special conditions, the next block has a higher possibility to be changed than the previous. In my opinion, we should save blockchain's block data as stable as possible.
-
-### Blockchain
-```
-type Blockchain struct {
-	blocks []*Block
-}
+# node_3
+./simplebc start
 ```
 
-Blockchain structure is just array of Blocks, very simple. And with our purpose, to make a simple blockchain simulation, I think it's enough. Though, we can see at least 2 problems here:
-+ Memory storage : Currently bitcoin blockchain size is about 150GB, and we don't want to save something that large to memory. In my opinion, we can save it to files (databases). We will mention later.
+## Send command to a node
+```shell
+# print its own blockchain
+cat samples/print.json | nc localhost {node_port}
 
-+ PrevBlockHash wasted : With this structure, we can reference to previous block by indexing, therefore block's PrevBlockHash property may be wasted. We can see its uses on future articles.
-
-You may want to consider ethereum blockchain structure [here](https://github.com/ethereum/go-ethereum/blob/master/core/blockchain.go)
-
-# Testing
+# add block with your own data (bytes type) to it blockchain
+cat samples/addblock.json | nc localhost {node_port}
 ```
-go test
-```
+
+# Program Structure
+
+## Node lifecycle
+Node's lifecycle is described by flowchart below:
+
+![flowchart](https://i.imgur.com/F1m7SCf.jpg)
+
+## Source structure
+* `block.go, blockchain.go` : no changes compare to part_1
+* `cli.go` : contains funtions that help us integrate with program by command line. I just implement only `start` command here. In detail, you can type `help` to show all avaiable commands provided by program.
+* `config.go` : contains structs and functions to store and manipulate our configuration information. In this part, only network's configuration is stored.
+* `config.json` : contains our configuration information.
+* `log.go` : contains my customized log mechanism. With this, we can write log easier. In this part, node will log its received messages and its state.
+* `message.go` : nodes communicate to each others with tcp protocol, and its message is defined here.
+* `network.go` : contains structs and functions to manipulate our network. Message sprearding and sending is defined here.
+* `server.go` : contains functions that listen and handle received messages from other nodes.
 
 # References
-https://jeiwan.cc/posts/building-blockchain-in-go-part-1/
-
-
+https://github.com/DNAProject/DNA
+https://github.com/urfave/cli
