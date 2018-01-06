@@ -2,8 +2,8 @@ package main
 
 import "fmt"
 
-func ExampleDataSavedInBlockchain() {
-	bc := InitBlockchain()
+func ExampleinitBlockchain() {
+	bc := initBlockchain()
 	bc.AddBlock("A send 1 btc to B")
 
 	for _, block := range bc.blocks {

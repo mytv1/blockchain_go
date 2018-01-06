@@ -7,8 +7,8 @@ import (
 	"os"
 )
 
-func StartServer() {
-	config = GetConfig()
+func startServer() {
+	config = getConfig()
 	l, err := net.Listen("tcp", config.Nw.LocalNode.Address)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -38,9 +38,9 @@ func handleRequest(conn net.Conn) {
 		return
 	}
 
-	bc := GetBlockchain()
+	bc := getBlockchain()
 
-	var m *Message = new(Message)
+	m := new(Message)
 	err = json.Unmarshal(buf[:length], m)
 
 	if err != nil {
@@ -51,23 +51,23 @@ func handleRequest(conn net.Conn) {
 	Info.Printf("Handle command %s request from : %s\n", m.Cmd, conn.RemoteAddr())
 
 	switch m.Cmd {
-	case CMD_REQ_BLOCKCHAIN:
-		conn.Write(bc.SerializeBlockchain())
-	case CMD_REQ_BEST_HEIGHT:
-		responseMs := CreateMsReponseBestHeight(bc.GetBestHeight())
-		conn.Write(responseMs.Serialize())
-	case CMD_REQ_BLOCK:
+	case CmdReqBlockchain:
+		conn.Write(bc.serialize())
+	case CmdReqBestHeight:
+		responseMs := createMsReponseBestHeight(bc.getBestHeight())
+		conn.Write(responseMs.serialize())
+	case CmdReqBlock:
 		block := bc.Blocks[uint8(m.Data[0])-1]
-		responseMs := CreateMsResponseBlock(block)
-		conn.Write(responseMs.Serialize())
-	case CMD_PRINT_BLOCKCHAIN:
+		responseMs := createMsResponseBlock(block)
+		conn.Write(responseMs.serialize())
+	case CmdPrintBlockchain:
 		Info.Printf("\n%v", bc)
-	case CMD_REQ_ADD_BLOCK:
-		bc.AddBlock(string(m.Data))
-		SpreadHashList()
-	case CMD_SPREAD_HASHLIST:
+	case CmdReqAddBlock:
+		bc.addBlock(string(m.Data))
+		spreadHashList()
+	case CmdSpreadHashList:
 		Info.Printf("Blockchain's change detected. Start sync.")
-		SendRequestBc(m.Source, bc)
+		sendRequestBc(m.Source, bc)
 	default:
 		Info.Printf("Message command invalid\n")
 	}

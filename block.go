@@ -10,6 +10,9 @@ import (
 	"time"
 )
 
+/*
+Block simple structure
+*/
 type Block struct {
 	Timestamp     int64  `json:"Timestamp"`
 	Data          []byte `json:"Data"`
@@ -25,7 +28,7 @@ func (b Block) String() string {
 	return strBlock
 }
 
-func (b *Block) SetHash() {
+func (b *Block) setHash() {
 	timestamp := []byte(strconv.FormatInt(b.Timestamp, 10))
 	headers := bytes.Join([][]byte{b.PrevBlockHash, b.Data, timestamp}, []byte{})
 	hash := sha256.Sum256(headers)
@@ -33,17 +36,17 @@ func (b *Block) SetHash() {
 	b.Hash = hash[:]
 }
 
-func NewBlock(data string, prevBlockHash []byte) *Block {
+func newBlock(data string, prevBlockHash []byte) *Block {
 	block := &Block{time.Now().Unix(), []byte(data), prevBlockHash, []byte{}}
-	block.SetHash()
+	block.setHash()
 	return block
 }
 
-func NewGenesisBlock() *Block {
-	return NewBlock("Genesis block", []byte{})
+func newGenesisBlock() *Block {
+	return newBlock("Genesis block", []byte{})
 }
 
-func (b *Block) Serialize() []byte {
+func (b *Block) serialize() []byte {
 	data, err := json.Marshal(b)
 
 	if err != nil {
@@ -53,8 +56,8 @@ func (b *Block) Serialize() []byte {
 	return data
 }
 
-func DeserializeBlock(data []byte) *Block {
-	var b *Block = new(Block)
+func deserializeBlock(data []byte) *Block {
+	b := new(Block)
 	err := json.Unmarshal(data, b)
 
 	if err != nil {

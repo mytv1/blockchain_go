@@ -6,13 +6,20 @@ import (
 )
 
 var (
-	Trace   *log.Logger
-	Info    *log.Logger
+	// Trace log process's trace
+	Trace *log.Logger
+
+	// Info log program's state
+	Info *log.Logger
+
+	// Warning log unwanted usage
 	Warning *log.Logger
-	Error   *log.Logger
+
+	// Error log errors
+	Error *log.Logger
 )
 
-func InitLog(
+func initLog(
 	traceHandle io.Writer,
 	infoHandle io.Writer,
 	warningHandle io.Writer,

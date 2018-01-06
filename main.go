@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	InitLog(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
-	app := NewCliApp()
+	initLog(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
+	app := newCliApp()
 	app.Run(os.Args)
 }

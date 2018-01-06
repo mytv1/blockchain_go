@@ -4,7 +4,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-func NewCliApp() *cli.App {
+func newCliApp() *cli.App {
 	app := cli.NewApp()
 	app.Name = "simple blockchain"
 	app.Usage = "simple blockchain implemented by golang"
@@ -19,7 +19,7 @@ func initStartServerCLI(app *cli.App) {
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:        "config, c",
-			Value:       DEFAULT_CONFIG_PATH,
+			Value:       defaultConfigPath,
 			Usage:       "Load configuration form `FILE`",
 			Destination: &configPath,
 		},
@@ -39,7 +39,7 @@ func initStartServerCLI(app *cli.App) {
 }
 
 func execStartCmd(c *cli.Context, configPath string) {
-	InitConfig(configPath)
-	GetNeighborBc()
-	StartServer()
+	initConfig(configPath)
+	getNeighborBc()
+	startServer()
 }

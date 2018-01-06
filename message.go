@@ -6,68 +6,78 @@ import (
 )
 
 const (
-	CMD_SPREAD_HASHLIST = "SPR_HL"
+	// CmdSpreadHashList is used to spread hash list msg to other nodes
+	CmdSpreadHashList = "SPR_HL"
 
-	CMD_REQ_BLOCKCHAIN   = "REQ_BC"
-	CMD_REQ_BEST_HEIGHT  = "REQ_BH"
-	CMD_REQ_BLOCK        = "REQ_BL"
-	CMD_PRINT_BLOCKCHAIN = "REQ_PRINT_BC"
-	CMD_REQ_ADD_BLOCK    = "REQ_ADD_BL"
+	// CmdReqBlockchain is used to request entire blockchain
+	CmdReqBlockchain = "REQ_BC"
+	// CmdReqBestHeight is used to request node's current height
+	CmdReqBestHeight = "REQ_BH"
+	// CmdReqBlock is used to request a single block
+	CmdReqBlock = "REQ_BL"
+	// CmdPrintBlockchain is used to request node's blockchain printing
+	CmdPrintBlockchain = "REQ_PRINT_BC"
+	// CmdReqAddBlock is used to request node to add a block
+	CmdReqAddBlock = "REQ_ADD_BL"
 
-	CMD_RES_BEST_HEIGHT = "RES_BH"
-	CMD_RES_BLOCK       = "RES_BL"
-	CMD_RES_BLOCKCHAIN  = "RES_BC"
+	// CmdResBestHeight is used to reponse with its own blockchain height
+	CmdResBestHeight = "RES_BH"
+	// CmdResBlock is used to response with node's single block
+	CmdResBlock = "RES_BL"
+	// CmdResBlockchain is used to reponse with entire blockchain
+	CmdResBlockchain = "RES_BC"
 )
 
+// Message is used to communicate between nodes
 type Message struct {
 	Cmd    string `json:"Cmd"`
 	Data   []byte `json:"Data"`
 	Source Node   `json:"Source"`
 }
 
-func CreateMessageBc(bc *Blockchain) *Message {
-	var m *Message = new(Message)
-	m.Cmd = CMD_RES_BLOCKCHAIN
-	m.Source = GetLocalNode()
-	m.Data = bc.SerializeBlockchain()
+func createMessageBc(bc *Blockchain) *Message {
+	m := new(Message)
+	m.Cmd = CmdResBlockchain
+	m.Source = getLocalNode()
+	m.Data = bc.serialize()
 	return m
 }
 
-func CreateMsRequestBestHeight() *Message {
-	var m *Message = new(Message)
-	m.Source = GetLocalNode()
-	m.Cmd = CMD_REQ_BEST_HEIGHT
+func createMsRequestBestHeight() *Message {
+	m := new(Message)
+	m.Source = getLocalNode()
+	m.Cmd = CmdReqBestHeight
 	return m
 }
 
-func CreateMsReponseBestHeight(bestHeight uint8) *Message {
-	var m *Message = new(Message)
-	m.Cmd = CMD_RES_BEST_HEIGHT
-	m.Source = GetLocalNode()
+func createMsReponseBestHeight(bestHeight uint8) *Message {
+	m := new(Message)
+	m.Cmd = CmdResBestHeight
+	m.Source = getLocalNode()
 	m.Data = []byte{bestHeight}
 	return m
 }
 
-func CreateMsRequestBlock(index uint8) *Message {
-	var m *Message = new(Message)
-	m.Cmd = CMD_REQ_BLOCK
-	m.Source = GetLocalNode()
+func createMsRequestBlock(index uint8) *Message {
+	m := new(Message)
+	m.Cmd = CmdReqBlock
+	m.Source = getLocalNode()
 	m.Data = append(m.Data, byte(index))
 	return m
 }
 
-func CreateMsResponseBlock(block *Block) *Message {
-	var m *Message = new(Message)
-	m.Cmd = CMD_RES_BLOCK
-	m.Source = GetLocalNode()
-	m.Data = block.Serialize()
+func createMsResponseBlock(block *Block) *Message {
+	m := new(Message)
+	m.Cmd = CmdResBlock
+	m.Source = getLocalNode()
+	m.Data = block.serialize()
 	return m
 }
 
-func CreateMsSpreadHashList(hashList [][]byte) *Message {
-	var m *Message = new(Message)
-	m.Cmd = CMD_SPREAD_HASHLIST
-	m.Source = GetLocalNode()
+func createMsSpreadHashList(hashList [][]byte) *Message {
+	m := new(Message)
+	m.Cmd = CmdSpreadHashList
+	m.Source = getLocalNode()
 	data, err := json.Marshal(hashList)
 	if err != nil {
 		Error.Panic("Marshal fail")
@@ -77,7 +87,7 @@ func CreateMsSpreadHashList(hashList [][]byte) *Message {
 	return m
 }
 
-func (m *Message) Serialize() []byte {
+func (m *Message) serialize() []byte {
 	data, err := json.Marshal(m)
 
 	if err != nil {
@@ -87,8 +97,8 @@ func (m *Message) Serialize() []byte {
 	return data
 }
 
-func DeserializeMessage(data []byte) *Message {
-	var m *Message = new(Message)
+func deserializeMessage(data []byte) *Message {
+	m := new(Message)
 	err := json.Unmarshal(data, m)
 
 	if err != nil {
