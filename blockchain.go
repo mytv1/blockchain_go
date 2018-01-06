@@ -7,6 +7,7 @@ import (
 	"strconv"
 )
 
+// Blockchain just array of blocks
 type Blockchain struct {
 	Blocks []*Block `json:"Blocks"`
 }
@@ -24,33 +25,33 @@ func (bc *Blockchain) String() string {
 
 var blockchain *Blockchain
 
-func (bc *Blockchain) AddBlock(data string) {
+func (bc *Blockchain) addBlock(data string) {
 	prevBlock := bc.Blocks[len(bc.Blocks)-1]
-	newBlock := NewBlock(data, prevBlock.Hash)
+	newBlock := newBlock(data, prevBlock.Hash)
 	bc.Blocks = append(bc.Blocks, newBlock)
 }
 
-func NewBlockchain() *Blockchain {
-	return &Blockchain{[]*Block{NewGenesisBlock()}}
+func newBlockchain() *Blockchain {
+	return &Blockchain{[]*Block{newGenesisBlock()}}
 }
 
-func InitBlockchain() {
-	blockchain = NewBlockchain()
+func initBlockchain() {
+	blockchain = newBlockchain()
 }
 
-func GetBlockchain() *Blockchain {
+func getBlockchain() *Blockchain {
 	return blockchain
 }
 
-func SetBlockchain(bc *Blockchain) {
+func setBlockchain(bc *Blockchain) {
 	blockchain = bc
 }
 
-func (b *Blockchain) GetBestHeight() uint8 {
-	return uint8(len(b.Blocks))
+func (bc *Blockchain) getBestHeight() uint8 {
+	return uint8(len(bc.Blocks))
 }
 
-func (bc *Blockchain) GetHashList() [][]byte {
+func (bc *Blockchain) getHashList() [][]byte {
 	var hashList [][]byte
 	for _, block := range bc.Blocks {
 		hashList = append(hashList, block.Hash)
@@ -58,7 +59,7 @@ func (bc *Blockchain) GetHashList() [][]byte {
 	return hashList
 }
 
-func (bc Blockchain) SerializeBlockchain() []byte {
+func (bc Blockchain) serialize() []byte {
 	data, err := json.Marshal(bc)
 
 	if err != nil {
@@ -69,8 +70,8 @@ func (bc Blockchain) SerializeBlockchain() []byte {
 	return data
 }
 
-func DeserializeBlockchain(data []byte) *Blockchain {
-	var bc *Blockchain = new(Blockchain)
+func deserialize(data []byte) *Blockchain {
+	bc := new(Blockchain)
 	err := json.Unmarshal(data, bc)
 
 	if err != nil {

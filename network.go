@@ -8,59 +8,64 @@ import (
 	"time"
 )
 
+// Node contains its own address
 type Node struct {
 	Address string `json:"address"`
 }
 
+// Network contains runn other neighbor nodes
 type Network struct {
-	LocalNode     Node   `json:"local_node"`
+	// LocalNode is running node by program
+	LocalNode Node `json:"local_node"`
+
+	// NeighborNodes are other nodes specified in config.json
 	NeighborNodes []Node `json:"neighbor_nodes"`
 }
 
 const (
-	MAX_ASK_TIME = 2
+	maxAskTime = 2
 )
 
-func GetNetwork() Network {
-	return GetConfig().Nw
+func getNetwork() Network {
+	return getConfig().Nw
 }
 
-func GetLocalNode() Node {
-	return GetConfig().Nw.LocalNode
+func getLocalNode() Node {
+	return getConfig().Nw.LocalNode
 }
 
-func GetNeighborBc() {
+func getNeighborBc() {
 	Info.Printf("Pull blockchain from other node in network...")
-	network := GetNetwork()
+	network := getNetwork()
 
-	for i := 0; i < MAX_ASK_TIME; i++ {
+	for i := 0; i < maxAskTime; i++ {
 		for _, node := range network.NeighborNodes {
 			time.Sleep(1000 * time.Millisecond)
-			if GetBlockchain() == nil {
-				SendRequestBc(node, nil)
+			if getBlockchain() == nil {
+				sendRequestBc(node, nil)
 			}
 		}
 	}
 
-	if GetBlockchain() == nil {
+	if getBlockchain() == nil {
 		Info.Printf("Pull failed. Create new blockchain.")
-		InitBlockchain()
+		initBlockchain()
 	} else {
-		bc := GetBlockchain()
-		Info.Printf("Pull completed. Blockchain height: %d", bc.GetBestHeight())
+		bc := getBlockchain()
+		Info.Printf("Pull completed. Blockchain height: %d", bc.getBestHeight())
 	}
 }
 
-func SendRequestBc(node Node, bc *Blockchain) {
+func sendRequestBc(node Node, bc *Blockchain) {
 	var myHeight uint8
-	if bc == nil || bc.GetBestHeight() == 0 {
+	if bc == nil || bc.getBestHeight() == 0 {
 		bc = new(Blockchain)
 		myHeight = 0
 	} else {
-		myHeight = uint8(bc.GetBestHeight())
+		myHeight = uint8(bc.getBestHeight())
 	}
 
-	neighborHeight, err := GetNeighborBcBestHeight(node)
+	neighborHeight, err := getNeighborBcBestHeight(node)
 
 	if err != nil {
 		return
@@ -68,8 +73,8 @@ func SendRequestBc(node Node, bc *Blockchain) {
 
 	// Get blocks until local blockchain's height equal to neighbor's
 	for myHeight < neighborHeight {
-		ms := CreateMsRequestBlock(myHeight + uint8(1))
-		data := ms.Serialize()
+		ms := createMsRequestBlock(myHeight + uint8(1))
+		data := ms.serialize()
 
 		conn, err := net.Dial("tcp", node.Address)
 
@@ -87,18 +92,18 @@ func SendRequestBc(node Node, bc *Blockchain) {
 		scanner := bufio.NewScanner(bufio.NewReader(conn))
 		scanner.Scan()
 		msAsBytes := scanner.Bytes()
-		msResponse := DeserializeMessage(msAsBytes)
+		msResponse := deserializeMessage(msAsBytes)
 
-		block := DeserializeBlock(msResponse.Data)
+		block := deserializeBlock(msResponse.Data)
 		bc.Blocks = append(bc.Blocks, block)
 
 		myHeight++
 	}
-	SetBlockchain(bc)
+	setBlockchain(bc)
 }
 
-func GetNeighborBcBestHeight(node Node) (uint8, error) {
-	m := CreateMsRequestBestHeight()
+func getNeighborBcBestHeight(node Node) (uint8, error) {
+	m := createMsRequestBestHeight()
 
 	conn, err := net.Dial("tcp", node.Address)
 
@@ -108,7 +113,7 @@ func GetNeighborBcBestHeight(node Node) (uint8, error) {
 	}
 	defer conn.Close()
 
-	_, err = io.Copy(conn, bytes.NewReader(m.Serialize()))
+	_, err = io.Copy(conn, bytes.NewReader(m.serialize()))
 	if err != nil {
 		Error.Panic(err)
 		return 0, err
@@ -118,22 +123,22 @@ func GetNeighborBcBestHeight(node Node) (uint8, error) {
 	scanner.Scan()
 	msAsBytes := scanner.Bytes()
 
-	message := DeserializeMessage(msAsBytes)
+	message := deserializeMessage(msAsBytes)
 	neighborHeigh := uint8(message.Data[0])
 	return neighborHeigh, nil
 }
 
-func SpreadHashList() {
-	nw := GetNetwork()
-	bc := GetBlockchain()
+func spreadHashList() {
+	nw := getNetwork()
+	bc := getBlockchain()
 
 	for _, node := range nw.NeighborNodes {
-		m := CreateMsSpreadHashList(bc.GetHashList())
-		SendMessage(node, m)
+		m := createMsSpreadHashList(bc.getHashList())
+		sendMessage(node, m)
 	}
 }
 
-func SendMessage(node Node, m *Message) {
+func sendMessage(node Node, m *Message) {
 	conn, err := net.Dial("tcp", node.Address)
 
 	if err != nil {
@@ -142,7 +147,7 @@ func SendMessage(node Node, m *Message) {
 	}
 	defer conn.Close()
 
-	_, err = io.Copy(conn, bytes.NewReader(m.Serialize()))
+	_, err = io.Copy(conn, bytes.NewReader(m.serialize()))
 	if err != nil {
 		Error.Panic(err)
 		return

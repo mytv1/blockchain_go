@@ -7,25 +7,26 @@ import (
 )
 
 const (
-	DEFAULT_CONFIG_PATH = "config.json"
+	defaultConfigPath = "config.json"
 )
 
+// Config contains program's configuration information
 type Config struct {
 	Nw Network `json:"network"`
 }
 
 var config Config
 
-func GetConfig() Config {
+func getConfig() Config {
 	return config
 }
 
-func InitConfig(configPathCLI string) {
+func initConfig(configPathCLI string) {
 	var configPath string
 	if configPathCLI != "" {
 		configPath = configPathCLI
 	} else {
-		configPath = DEFAULT_CONFIG_PATH
+		configPath = defaultConfigPath
 	}
 
 	config = importConfig(configPath)
