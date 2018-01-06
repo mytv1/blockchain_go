@@ -160,5 +160,6 @@ Node's lifecycle is described by flowchart below:
 * `server.go` : contains functions that listen and handle received messages from other nodes.
 
 # References
-https://github.com/DNAProject/DNA
-https://github.com/urfave/cli
+* https://github.com/DNAProject/DNA : Other blockchain's decentralized network implement by go
+
+* https://github.com/urfave/cli : Powererful cli support package
