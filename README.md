@@ -1,7 +1,7 @@
 # blockchain_go
 My simple implement of blockchain with Golang.
 
-This is part 2 of my articles about my blockchain's implement tutorial below :
+This is the second part of my articles about my blockchain's implement tutorial below :
 
 1. [Basic prototype](https://github.com/mytv1/blockchain_go/tree/part_1)
 2. [Network](https://github.com/mytv1/blockchain_go/tree/part_2)
@@ -19,16 +19,19 @@ I'm also new in Golang and Blockchain. So if you spot any problem in my code, pl
 - [References](#references)
 
 # Introduction
-In this article, we'll built a blockchain with very simple decentralized network.
+In this part, we'll build a simple decentralized network with a blockchain.
 
-Here are some things you can try with this part :
-+ Run n node with shared blockchain
-+ First started node will initialize its first block. Other nodes, when started, will pull blockchain from first connected node in network
-+ Send command in json format to a node from command line by tcp. Here are two avaiable commands : "Add block" and "Print entire blockchain"
-+ When a block is added in a node, it will be shared to others immediately. Therefore all blockchain in all node will be synchronized
+Here are a few things you can try with this part :
++ Run n nodes which have the same blockchain
++ Send command in json format to a node from command line via tcp. Here are two available commands : "Add block" and "Print entire blockchain"
+
+Starting the first node will initialize its first block. Other nodes, when started, will try to connect to each other and pull blockchain from the first one it connect in the network. When a block is added into a node, it will be shared to others immediately. Therefore all blockchain in all nodes will be synchronized.
+
+
 
 *Note : i implemented it with my basic knowledge about blockchain. So i'm not sure i did it properly. :)
 
+[comment]: <> (Xem xét bỏ prerequisites vì là part 2 rồi. Không thỉ trỏ về part 1 để câu view :v)
 # Prerequisites
 (My local environment)
 
@@ -40,15 +43,17 @@ $ go version
 go version go1.9.2 linux/amd64
 ```
 
-# Install
+
+# Running
+## Prepare 
+
+Build :
 ```
 make deps
 make build
 ```
 
-# Running
-## Prepare 
-To make it works like a network, we need run each node independently. In example, you can prepare 3 nodes network's environment like this :
+To make it works like a network, we need to run each node independently. For example, you can prepare a network environment with 3 nodes like this :
 
 ```shell
 $tree
@@ -74,11 +79,11 @@ $tree
 
 ```
 
-* simplebc : executed file. May be you've built it with `make build` on install section above
+* simplebc : executed file. You can build it with `make build` above.
 * config.json : information about your network.
-* samples (optional) : contains commands to a node. You can send command to a node by tcp to request it add a block, or print its own blockchain as you saw in part 1
+* samples (optional) : contains commands to a node. You can send command to a node via tcp to request it to add a block, or print its own blockchain as you saw in part 1
 
-config.json on each node will look like below :
+`config.json` of each node will look like below :
 
 ```shell
 # configuration snippets #
@@ -145,21 +150,22 @@ cat samples/addblock.json | nc localhost {node_port}
 # Program Structure
 
 ## Node lifecycle
-Node's lifecycle is described by flowchart below:
+A node's lifecycle is described by this flowchart:
 
 ![flowchart](https://i.imgur.com/F1m7SCf.jpg)
 
 ## Source structure
-* `block.go, blockchain.go` : no changes compare to part_1
-* `cli.go` : contains funtions that help us integrate with program by command line. I just implement only `start` command here. In detail, you can type `help` to show all avaiable commands provided by program.
-* `config.go` : contains structs and functions to store and manipulate our configuration information. In this part, only network's configuration is stored.
+* `block.go, blockchain.go` : the same as part_1
+* `cli.go` : contains functions that help us interact with our program using command line. I just implement only `start` command here. For more details, you can type `help` to show all available commands.
+* `config.go` : contains structs and functions to store and manipulate our configuration information. In this part, only network configuration is stored.
 * `config.json` : contains our configuration information.
-* `log.go` : contains my customized log mechanism. With this, we can write log easier. In this part, node will log its received messages and its state.
-* `message.go` : nodes communicate to each others with tcp protocol, and its message is defined here.
-* `network.go` : contains structs and functions to manipulate our network. Message sprearding and sending is defined here.
+* `log.go` : my customized log mechanism to write log easier. In this part, node will log its received messages and its state.
+* `message.go` : ~~nodes communicate to each others with tcp protocol, and its message is defined here~~.
+[comment]: <> (defines messages used to communicate between nodes via tcp)
+* `network.go` : contains structs and functions to manipulate our network. Define how to spread and send messages.
 * `server.go` : contains functions that listen and handle received messages from other nodes.
 
 # References
-* https://github.com/DNAProject/DNA : Other blockchain's decentralized network implement by go
+* https://github.com/DNAProject/DNA : Other blockchain-based decentralized network implement by go
 
-* https://github.com/urfave/cli : Powererful cli support package
+* https://github.com/urfave/cli : Powerful cli support package
