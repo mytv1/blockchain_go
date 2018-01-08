@@ -37,8 +37,8 @@ go version go1.9.2 linux/amd64
 ```
 # Running
 ```
-go build .
-./blockchain.go
+make
+./simplebc
 ```
 
 # Structure
@@ -80,7 +80,6 @@ type Blockchain struct {
 
 Blockchain structure is just array of Blocks, very simple. And with our purpose, to make a simple blockchain simulation, I think it's enough. Though, we can see at least 2 problems here:
 + Memory storage : Currently bitcoin blockchain size is about 150GB, and we don't want to save something that large to memory. In my opinion, we can save it to files (databases). We will mention later.
-
 
 # References
 https://jeiwan.cc/posts/building-blockchain-in-go-part-1/
