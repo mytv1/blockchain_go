@@ -18,7 +18,6 @@ I'm also new in Golang and Blockchain. So if you spot any problem in my code, pl
 - [Prerequisites](#prerequisites)
 - [Running](#running)
 - [Program Structure](#structure)
-- [Testing](#testing)
 - [References](#references)
 
 # Introduction
@@ -29,9 +28,9 @@ When you run the program, the sample chain of blocks will be printed with its ha
 # Prerequisites
 (My local environment)
 
-- OS : Ubuntu 16.04.2 LTS
-- Go install : https://golang.org/doc/install
++ OS : Ubuntu 16.04.2 LTS
 
++ Golang :
 ```
 $ go version
 go version go1.9.2 linux/amd64
@@ -82,14 +81,6 @@ type Blockchain struct {
 Blockchain structure is just array of Blocks, very simple. And with our purpose, to make a simple blockchain simulation, I think it's enough. Though, we can see at least 2 problems here:
 + Memory storage : Currently bitcoin blockchain size is about 150GB, and we don't want to save something that large to memory. In my opinion, we can save it to files (databases). We will mention later.
 
-+ PrevBlockHash wasted : With this structure, we can reference to previous block by indexing, therefore block's PrevBlockHash property may be wasted. We can see its uses on future articles.
-
-You may want to consider ethereum blockchain structure [here](https://github.com/ethereum/go-ethereum/blob/master/core/blockchain.go)
-
-# Testing
-```
-go test
-```
 
 # References
 https://jeiwan.cc/posts/building-blockchain-in-go-part-1/
