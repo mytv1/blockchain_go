@@ -9,8 +9,6 @@ const (
 	// CmdSpreadHashList is used to spread hash list msg to other nodes
 	CmdSpreadHashList = "SPR_HL"
 
-	// CmdReqBlockchain is used to request entire blockchain
-	CmdReqBlockchain = "REQ_BC"
 	// CmdReqBestHeight is used to request node's current height
 	CmdReqBestHeight = "REQ_BH"
 	// CmdReqBlock is used to request a single block
@@ -24,8 +22,6 @@ const (
 	CmdResBestHeight = "RES_BH"
 	// CmdResBlock is used to response with node's single block
 	CmdResBlock = "RES_BL"
-	// CmdResBlockchain is used to reponse with entire blockchain
-	CmdResBlockchain = "RES_BC"
 )
 
 // Message is used to communicate between nodes
@@ -35,14 +31,6 @@ type Message struct {
 	Source Node   `json:"Source"`
 }
 
-func createMessageBc(bc *Blockchain) *Message {
-	m := new(Message)
-	m.Cmd = CmdResBlockchain
-	m.Source = getLocalNode()
-	m.Data = bc.serialize()
-	return m
-}
-
 func createMsRequestBestHeight() *Message {
 	m := new(Message)
 	m.Source = getLocalNode()
@@ -50,19 +38,19 @@ func createMsRequestBestHeight() *Message {
 	return m
 }
 
-func createMsReponseBestHeight(bestHeight uint8) *Message {
+func createMsReponseBestHeight(bestHeight int) *Message {
 	m := new(Message)
 	m.Cmd = CmdResBestHeight
 	m.Source = getLocalNode()
-	m.Data = []byte{bestHeight}
+	m.Data = intToBytes(bestHeight)
 	return m
 }
 
-func createMsRequestBlock(index uint8) *Message {
+func createMsRequestBlock(index int) *Message {
 	m := new(Message)
 	m.Cmd = CmdReqBlock
 	m.Source = getLocalNode()
-	m.Data = append(m.Data, byte(index))
+	m.Data = intToBytes(index)
 	return m
 }
 

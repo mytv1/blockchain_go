@@ -18,6 +18,8 @@ type Block struct {
 	Data          []byte `json:"Data"`
 	PrevBlockHash []byte `json:"PrevBlockHash"`
 	Hash          []byte `json:"Hash"`
+	Height        int    `json:"Height"`
+	Nonce         int    `json:"Nonce"`
 }
 
 func (b Block) String() string {
@@ -25,6 +27,8 @@ func (b Block) String() string {
 	strBlock += fmt.Sprintf("Prev hash: %x\n", b.PrevBlockHash)
 	strBlock += fmt.Sprintf("Data: %s\n", b.Data)
 	strBlock += fmt.Sprintf("Hash: %x\n", b.Hash)
+	strBlock += fmt.Sprintf("Nonce: %x\n", b.Nonce)
+	strBlock += fmt.Sprintf("Height: %x\n", b.Height)
 	return strBlock
 }
 
@@ -36,14 +40,20 @@ func (b *Block) setHash() {
 	b.Hash = hash[:]
 }
 
-func newBlock(data string, prevBlockHash []byte) *Block {
-	block := &Block{time.Now().Unix(), []byte(data), prevBlockHash, []byte{}}
+// mine block
+func newBlock(data string, prevBlockHash []byte, height int) *Block {
+	block := &Block{time.Now().Unix(), []byte(data), prevBlockHash, []byte{}, height, 0}
 	block.setHash()
 	return block
 }
 
+func (b *Block) isGenesisBlock() bool {
+	return len(b.PrevBlockHash) == 0
+}
+
 func newGenesisBlock() *Block {
-	return newBlock("Genesis block", []byte{})
+	// add proof of work
+	return newBlock("Genesis block", []byte{}, 1)
 }
 
 func (b *Block) serialize() []byte {
@@ -61,7 +71,7 @@ func deserializeBlock(data []byte) *Block {
 	err := json.Unmarshal(data, b)
 
 	if err != nil {
-		Error.Printf("Unmarshal block fail\n")
+		Error.Panic(err)
 		os.Exit(1)
 	}
 

@@ -40,6 +40,11 @@ func initStartServerCLI(app *cli.App) {
 
 func execStartCmd(c *cli.Context, configPath string) {
 	initConfig(configPath)
-	getNeighborBc()
-	startServer()
+	bc := getLocalBc()
+	if bc == nil {
+		bc = getNeighborBc()
+	}
+
+	startServer(bc)
+	defer bc.db.Close()
 }

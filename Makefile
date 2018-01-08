@@ -21,6 +21,7 @@ run:
 	./$(BINARY_NAME)
 deps:
 	$(GOGET) github.com/urfave/cli
+	$(GOGET) github.com/boltdb/bolt/...
 
 
 # Cross compilation
