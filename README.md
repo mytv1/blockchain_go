@@ -36,8 +36,8 @@ go version go1.9.2 linux/amd64
 ```
 # Running
 ```
-go build .
-./blockchain.go
+make
+./simplebc
 ```
 
 # Structure
@@ -81,8 +81,6 @@ Blockchain structure is just array of Blocks, very strange. With purpose of this
 + Memory storage : Currently bitcoin blockchain size is about 150GB, and we don't want to save something like that to memory. In fact, i think it's saved to file (database). We may implement it later.
 + PrevBlockHash wasted : With this structure, we can reference to previous block by indexing, therefore block's PrevBlockHash is wasted a bit. But i think it's fundamental, and we can see it's more useful on future articles.
 
-
-Enjoy!
 
 # References
 https://jeiwan.cc/posts/building-blockchain-in-go-part-1/
