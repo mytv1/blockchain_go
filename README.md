@@ -12,7 +12,6 @@ I'm also new in Golang and Blockchain. So if you spot any problem in my code, pl
 
 # Contents
 - [Introduction](#introduction)
-- [Prerequisites](#prerequisites)
 - [Install](#install)
 - [Running](#running)
 - [Program Structure](#program-structure)
@@ -30,19 +29,6 @@ Starting the first node will initialize its first block. Other nodes, when start
 
 
 *Note : i implemented it with my basic knowledge about blockchain. So i'm not sure i did it properly. :)
-
-[comment]: <> (Xem xét bỏ prerequisites vì là part 2 rồi. Không thỉ trỏ về part 1 để câu view :v)
-# Prerequisites
-(My local environment)
-
-- OS : Ubuntu 16.04.2 LTS
-- Go install : https://golang.org/doc/install
-
-```
-$ go version
-go version go1.9.2 linux/amd64
-```
-
 
 # Running
 ## Prepare 
@@ -160,8 +146,7 @@ A node's lifecycle is described by this flowchart:
 * `config.go` : contains structs and functions to store and manipulate our configuration information. In this part, only network configuration is stored.
 * `config.json` : contains our configuration information.
 * `log.go` : my customized log mechanism to write log easier. In this part, node will log its received messages and its state.
-* `message.go` : ~~nodes communicate to each others with tcp protocol, and its message is defined here~~.
-[comment]: <> (defines messages used to communicate between nodes via tcp)
+* `message.go` : defines messages used to communicate between nodes via tcp.
 * `network.go` : contains structs and functions to manipulate our network. Define how to spread and send messages.
 * `server.go` : contains functions that listen and handle received messages from other nodes.
 
