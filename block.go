@@ -42,8 +42,8 @@ func newBlock(data string, prevBlockHash []byte) *Block {
 	return block
 }
 
-func newGenesisBlock() *Block {
-	return newBlock("Genesis block", []byte{})
+func newGenesisBlock(str string) *Block {
+	return newBlock(str, []byte{})
 }
 
 func (b *Block) serialize() []byte {

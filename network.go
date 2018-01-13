@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"io"
 	"net"
-	"time"
+	"strconv"
 )
 
 // Node contains its own address
@@ -34,53 +34,58 @@ func getLocalNode() Node {
 	return getConfig().Nw.LocalNode
 }
 
-func getNeighborBc() {
+func getNeighborBc() *Blockchain {
+	var bc *Blockchain
 	Info.Printf("Pull blockchain from other node in network...")
 	network := getNetwork()
 
 	for i := 0; i < maxAskTime; i++ {
 		for _, node := range network.NeighborNodes {
-			time.Sleep(1000 * time.Millisecond)
-			if getBlockchain() == nil {
-				sendRequestBc(node, nil)
+			if bc == nil || bc.isEmpty() {
+				bc = sendRequestBc(node, nil)
+				if bc != nil && !bc.isEmpty() {
+					goto Afterpull
+				}
 			}
 		}
 	}
 
-	if getBlockchain() == nil {
+Afterpull:
+
+	if bc == nil || bc.isEmpty() {
 		Info.Printf("Pull failed. Create new blockchain.")
-		initBlockchain()
+		bc = InitBlockchain()
 	} else {
-		bc := getBlockchain()
 		Info.Printf("Pull completed. Blockchain height: %d", bc.getBestHeight())
 	}
+	return bc
 }
 
-func sendRequestBc(node Node, bc *Blockchain) {
-	var myHeight uint8
+func sendRequestBc(node Node, bc *Blockchain) *Blockchain {
+	var myHeight int
 	if bc == nil || bc.getBestHeight() == 0 {
 		bc = new(Blockchain)
 		myHeight = 0
 	} else {
-		myHeight = uint8(bc.getBestHeight())
+		myHeight = bc.getBestHeight()
 	}
 
 	neighborHeight, err := getNeighborBcBestHeight(node)
 
 	if err != nil {
-		return
+		return nil
 	}
 
 	// Get blocks until local blockchain's height equal to neighbor's
 	for myHeight < neighborHeight {
-		ms := createMsRequestBlock(myHeight + uint8(1))
+		ms := createMsRequestBlock(myHeight + 1)
 		data := ms.serialize()
 
 		conn, err := net.Dial("tcp", node.Address)
 
 		if err != nil {
 			Error.Printf("%s is not avaiable\n", node.Address)
-			return
+			return nil
 		}
 		defer conn.Close()
 
@@ -96,13 +101,13 @@ func sendRequestBc(node Node, bc *Blockchain) {
 
 		block := deserializeBlock(msResponse.Data)
 		bc.Blocks = append(bc.Blocks, block)
-
 		myHeight++
 	}
-	setBlockchain(bc)
+
+	return bc
 }
 
-func getNeighborBcBestHeight(node Node) (uint8, error) {
+func getNeighborBcBestHeight(node Node) (int, error) {
 	m := createMsRequestBestHeight()
 
 	conn, err := net.Dial("tcp", node.Address)
@@ -124,13 +129,16 @@ func getNeighborBcBestHeight(node Node) (uint8, error) {
 	msAsBytes := scanner.Bytes()
 
 	message := deserializeMessage(msAsBytes)
-	neighborHeigh := uint8(message.Data[0])
-	return neighborHeigh, nil
+	neighborHeight, err := strconv.Atoi(string(message.Data))
+	if err != nil {
+		Error.Printf("")
+	}
+
+	return neighborHeight, nil
 }
 
-func spreadHashList() {
+func spreadHashList(bc *Blockchain) {
 	nw := getNetwork()
-	bc := getBlockchain()
 
 	for _, node := range nw.NeighborNodes {
 		m := createMsSpreadHashList(bc.getHashList())

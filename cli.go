@@ -40,6 +40,6 @@ func initStartServerCLI(app *cli.App) {
 
 func execStartCmd(c *cli.Context, configPath string) {
 	initConfig(configPath)
-	getNeighborBc()
-	startServer()
+	bc := getNeighborBc()
+	startServer(bc)
 }

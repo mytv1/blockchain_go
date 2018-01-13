@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"sync"
 )
 
 // Blockchain just array of blocks
 type Blockchain struct {
 	Blocks []*Block `json:"Blocks"`
 }
+
+var instantiated *Blockchain
+var once sync.Once
 
 func (bc *Blockchain) String() string {
 	var strBlockchain string
@@ -23,32 +27,25 @@ func (bc *Blockchain) String() string {
 	return strBlockchain
 }
 
-var blockchain *Blockchain
-
 func (bc *Blockchain) addBlock(data string) {
 	prevBlock := bc.Blocks[len(bc.Blocks)-1]
 	newBlock := newBlock(data, prevBlock.Hash)
 	bc.Blocks = append(bc.Blocks, newBlock)
 }
 
-func newBlockchain() *Blockchain {
-	return &Blockchain{[]*Block{newGenesisBlock()}}
+func (bc *Blockchain) isEmpty() bool {
+	return bc.Blocks == nil || bc.getBestHeight() == 0
 }
 
-func initBlockchain() {
-	blockchain = newBlockchain()
+func InitBlockchain() *Blockchain {
+	once.Do(func() {
+		instantiated = &Blockchain{[]*Block{newGenesisBlock("Genesis block")}}
+	})
+	return instantiated
 }
 
-func getBlockchain() *Blockchain {
-	return blockchain
-}
-
-func setBlockchain(bc *Blockchain) {
-	blockchain = bc
-}
-
-func (bc *Blockchain) getBestHeight() uint8 {
-	return uint8(len(bc.Blocks))
+func (bc *Blockchain) getBestHeight() int {
+	return len(bc.Blocks)
 }
 
 func (bc *Blockchain) getHashList() [][]byte {

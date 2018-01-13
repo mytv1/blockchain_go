@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 )
 
-func startServer() {
+func startServer(bc *Blockchain) {
 	config = getConfig()
 	l, err := net.Listen("tcp", config.Nw.LocalNode.Address)
 	if err != nil {
@@ -26,19 +27,17 @@ func startServer() {
 			os.Exit(1)
 		}
 
-		go handleRequest(conn)
+		go handleRequest(conn, bc)
 	}
 }
 
-func handleRequest(conn net.Conn) {
+func handleRequest(conn net.Conn, bc *Blockchain) {
 	buf := make([]byte, 1024)
 	length, err := conn.Read(buf)
 	if err != nil {
 		Error.Println("Error reading:", err.Error())
 		return
 	}
-
-	bc := getBlockchain()
 
 	m := new(Message)
 	err = json.Unmarshal(buf[:length], m)
@@ -51,26 +50,49 @@ func handleRequest(conn net.Conn) {
 	Info.Printf("Handle command %s request from : %s\n", m.Cmd, conn.RemoteAddr())
 
 	switch m.Cmd {
-	case CmdReqBlockchain:
-		conn.Write(bc.serialize())
 	case CmdReqBestHeight:
-		responseMs := createMsReponseBestHeight(bc.getBestHeight())
-		conn.Write(responseMs.serialize())
+		handleReqBestHeight(conn, bc)
 	case CmdReqBlock:
-		block := bc.Blocks[uint8(m.Data[0])-1]
-		responseMs := createMsResponseBlock(block)
-		conn.Write(responseMs.serialize())
+		handleReqBlock(conn, bc, m)
 	case CmdPrintBlockchain:
-		Info.Printf("\n%v", bc)
+		handlePrintBlockchain(bc)
 	case CmdReqAddBlock:
-		bc.addBlock(string(m.Data))
-		spreadHashList()
+		handleReqAddBlock(conn, bc, m)
 	case CmdSpreadHashList:
-		Info.Printf("Blockchain's change detected. Start sync.")
-		sendRequestBc(m.Source, bc)
+		handleSpreadHashList(conn, bc, m)
 	default:
 		Info.Printf("Message command invalid\n")
 	}
 
 	conn.Close()
+}
+
+func handleReqBestHeight(conn net.Conn, bc *Blockchain) {
+	responseMs := createMsReponseBestHeight(bc.getBestHeight())
+	conn.Write(responseMs.serialize())
+}
+
+func handleReqBlock(conn net.Conn, bc *Blockchain, m *Message) {
+	number, err := strconv.Atoi(string(m.Data))
+	if err != nil {
+		Error.Printf("")
+	}
+	index := number - 1
+	block := bc.Blocks[index]
+	responseMs := createMsResponseBlock(block)
+	conn.Write(responseMs.serialize())
+}
+
+func handlePrintBlockchain(bc *Blockchain) {
+	Info.Printf("\n%v", bc)
+}
+
+func handleReqAddBlock(conn net.Conn, bc *Blockchain, m *Message) {
+	bc.addBlock(string(m.Data))
+	spreadHashList(bc)
+}
+
+func handleSpreadHashList(conn net.Conn, bc *Blockchain, m *Message) {
+	Info.Printf("Blockchain's change detected. Start sync.")
+	sendRequestBc(m.Source, bc)
 }
