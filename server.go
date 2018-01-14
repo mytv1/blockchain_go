@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -39,13 +38,7 @@ func handleRequest(conn net.Conn, bc *Blockchain) {
 		return
 	}
 
-	m := new(Message)
-	err = json.Unmarshal(buf[:length], m)
-
-	if err != nil {
-		Error.Println("Error unmarshal:", err.Error())
-		return
-	}
+	m := deserializeMessage(buf[:length])
 
 	Info.Printf("Handle command %s request from : %s\n", m.Cmd, conn.RemoteAddr())
 
