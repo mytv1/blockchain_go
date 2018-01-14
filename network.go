@@ -44,20 +44,13 @@ func getNeighborBc() *Blockchain {
 			if bc == nil || bc.isEmpty() {
 				bc = sendRequestBc(node, nil)
 				if bc != nil && !bc.isEmpty() {
-					goto Afterpull
+					Info.Printf("Pull completed. Blockchain height: %d", bc.getBestHeight())
+					return bc
 				}
 			}
 		}
 	}
 
-Afterpull:
-
-	if bc == nil || bc.isEmpty() {
-		Info.Printf("Pull failed. Create new blockchain.")
-		bc = InitBlockchain()
-	} else {
-		Info.Printf("Pull completed. Blockchain height: %d", bc.getBestHeight())
-	}
 	return bc
 }
 

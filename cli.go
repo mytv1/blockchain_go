@@ -41,5 +41,9 @@ func initStartServerCLI(app *cli.App) {
 func execStartCmd(c *cli.Context, configPath string) {
 	initConfig(configPath)
 	bc := getNeighborBc()
+	if bc == nil || bc.isEmpty() {
+		Info.Printf("Pull failed. Create new blockchain.")
+		bc = InitBlockchain()
+	}
 	startServer(bc)
 }
