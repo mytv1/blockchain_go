@@ -45,6 +45,10 @@ func execStartCmd(c *cli.Context, configPath string) {
 		bc = getNeighborBc()
 	}
 
+	if bc.isEmpty() {
+		bc.addBlock(newGenesisBlock())
+	}
+
 	startServer(bc)
 	defer bc.db.Close()
 }

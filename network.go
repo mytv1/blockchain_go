@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"io"
 	"net"
-	"time"
 )
 
 // Node contains its own address
@@ -41,17 +40,14 @@ func getNeighborBc() *Blockchain {
 
 	for i := 0; i < maxAskTime; i++ {
 		for _, node := range network.NeighborNodes {
-			time.Sleep(1000 * time.Millisecond)
-			if bc.isBlockchainEmpty() {
+			if bc.isEmpty() {
 				bc = sendRequestBc(node, *bc)
+				if bc != nil && !bc.isEmpty() {
+					Info.Printf("Pull completed. Blockchain height: %d", bc.getBestHeight())
+					return bc
+				}
 			}
 		}
-	}
-
-	if bc.isBlockchainEmpty() {
-		bc.addBlock(newGenesisBlock())
-	} else {
-		Info.Printf("Pull completed. Blockchain height: %d", bc.getBestHeight())
 	}
 
 	return bc
@@ -88,7 +84,6 @@ func sendRequestBc(node Node, bc Blockchain) *Blockchain {
 		scanner.Scan()
 		msAsBytes := scanner.Bytes()
 		msResponse := deserializeMessage(msAsBytes)
-
 		block := deserializeBlock(msResponse.Data)
 		bc.addBlock(block)
 
@@ -121,8 +116,8 @@ func getNeighborBcBestHeight(node Node) (int, error) {
 	}
 
 	msAsBytes := scanner.Bytes()
-
 	message := deserializeMessage(msAsBytes)
+
 	neighborHeigh := bytesToInt(message.Data)
 	return neighborHeigh, nil
 }

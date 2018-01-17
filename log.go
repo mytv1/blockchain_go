@@ -12,6 +12,9 @@ var (
 	// Info log program's state
 	Info *log.Logger
 
+	// Debug log debug mesage
+	Debug *log.Logger
+
 	// Warning log unwanted usage
 	Warning *log.Logger
 
@@ -21,6 +24,7 @@ var (
 
 func initLog(
 	traceHandle io.Writer,
+	debugHandle io.Writer,
 	infoHandle io.Writer,
 	warningHandle io.Writer,
 	errorHandle io.Writer) {
@@ -31,6 +35,10 @@ func initLog(
 
 	Info = log.New(infoHandle,
 		"INFO: ",
+		log.Ltime|log.Lshortfile)
+
+	Debug = log.New(debugHandle,
+		"DEBUG: ",
 		log.Ltime|log.Lshortfile)
 
 	Warning = log.New(warningHandle,

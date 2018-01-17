@@ -85,32 +85,26 @@ func (bc *Blockchain) String() string {
 
 func (bc *Blockchain) addBlock(block *Block) {
 	pow := newProofOfWork(block)
-	// os.Exit(1)
-	nonce, hash := pow.run()
-	block.Nonce = nonce
-	block.Hash = hash[:]
 
-	Info.Printf(" %v ", block)
-
-	if bc.isBlockchainEmpty() {
-		bc.addGenesisBlock(block)
-	} else {
-		bc.addNormalBlock(block)
+	if !pow.validate() {
+		nonce, hash := pow.run()
+		block.Nonce = nonce
+		block.Hash = hash[:]
 	}
-}
 
-func (bc *Blockchain) addGenesisBlock(genesisBlock *Block) {
 	err := bc.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blocksBucketName))
 
-		err := b.Put(genesisBlock.Hash, genesisBlock.serialize())
-		if err != nil {
-			Error.Panic(err)
-		}
+		if bc.isEmpty() {
+			bc.putBlock(b, block.Hash, block.serialize())
+		} else {
+			lastHash := b.Get([]byte("l"))
+			encodedLastBlock := b.Get(lastHash)
+			lastBlock := deserializeBlock(encodedLastBlock)
 
-		err = b.Put([]byte("l"), genesisBlock.Hash)
-		if err != nil {
-			Error.Panic(err)
+			if block.Height > lastBlock.Height && bytes.Compare(block.PrevBlockHash, lastBlock.Hash) == 0 {
+				bc.putBlock(b, block.Hash, block.serialize())
+			}
 		}
 
 		return nil
@@ -121,30 +115,13 @@ func (bc *Blockchain) addGenesisBlock(genesisBlock *Block) {
 	}
 }
 
-func (bc *Blockchain) addNormalBlock(block *Block) {
-	err := bc.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(blocksBucketName))
+func (bc *Blockchain) putBlock(b *bolt.Bucket, blockHash, blockData []byte) {
+	err := b.Put(blockHash, blockData)
+	if err != nil {
+		Error.Panic(err)
+	}
 
-		lastHash := b.Get([]byte("l"))
-		encodedLastBlock := b.Get(lastHash)
-		lastBlock := deserializeBlock(encodedLastBlock)
-
-		// TODO : Add verify function
-		if block.Height > lastBlock.Height && bytes.Compare(block.PrevBlockHash, lastBlock.Hash) == 0 {
-			blockData := block.serialize()
-			err := b.Put(block.Hash, blockData)
-			if err != nil {
-				Error.Panic(err)
-			}
-
-			err = b.Put([]byte("l"), block.Hash)
-			if err != nil {
-				Error.Panic(err)
-			}
-		}
-		return nil
-	})
-
+	err = b.Put([]byte("l"), blockHash)
 	if err != nil {
 		Error.Panic(err)
 	}
@@ -178,7 +155,7 @@ func createEmptyBlockchain() *Blockchain {
 	return bc
 }
 
-func (bc *Blockchain) isBlockchainEmpty() bool {
+func (bc *Blockchain) isEmpty() bool {
 	return len(bc.getTopBlockHash()) == 0
 }
 

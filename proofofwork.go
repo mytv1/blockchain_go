@@ -61,7 +61,18 @@ func (pow *ProofOfWork) run() (int, []byte) {
 			nonce++
 		}
 	}
-	Info.Println()
-	Info.Println()
+	fmt.Printf("\n\n")
 	return nonce, hash[:]
+}
+
+func (pow *ProofOfWork) validate() bool {
+	var hashInt big.Int
+
+	data := pow.prepareData(pow.block.Nonce)
+	hash := sha256.Sum256(data)
+	hashInt.SetBytes(hash[:])
+
+	isValid := hashInt.Cmp(pow.target) == -1
+
+	return isValid
 }
