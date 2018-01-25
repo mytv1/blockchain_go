@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"io"
 	"net"
+	"os"
+	"strconv"
 )
 
 // Node contains its own address
@@ -33,63 +35,107 @@ func getLocalNode() Node {
 	return getConfig().Nw.LocalNode
 }
 
-func getNeighborBc() *Blockchain {
+func syncWithNeighborNode(bc *Blockchain) {
 	Info.Printf("Pull blockchain from other node in network...")
 	network := getNetwork()
-	bc := createEmptyBlockchain()
 
 	for i := 0; i < maxAskTime; i++ {
 		for _, node := range network.NeighborNodes {
-			if bc.isEmpty() {
-				bc = sendRequestBc(node, *bc)
-				if bc != nil && !bc.isEmpty() {
-					Info.Printf("Pull completed. Blockchain height: %d", bc.getBestHeight())
-					return bc
-				}
+			if sendRequestBc(node, bc) {
+				Info.Printf("Pull completed. Blockchain height: %d", bc.getBestHeight())
+				return
 			}
 		}
 	}
-
-	return bc
 }
 
-func sendRequestBc(node Node, bc Blockchain) *Blockchain {
+func sendRequestBc(node Node, bc *Blockchain) bool {
 	myHeight := bc.getBestHeight()
 
 	neighborHeight, err := getNeighborBcBestHeight(node)
 
 	if err != nil {
-		return &bc
+		return false
 	}
 
-	// Get blocks until local blockchain's height equal to neighbor's
-	for myHeight < neighborHeight {
-		ms := createMsRequestBlock(myHeight + 1)
-		data := ms.serialize()
+	Info.Printf(" %d - %d ", myHeight, neighborHeight)
+	minHeight := min(myHeight, neighborHeight)
 
-		conn, err := net.Dial("tcp", node.Address)
-
-		if err != nil {
-			Error.Printf("%s is not avaiable\n", node.Address)
-			return &bc
+	for i := 1; i <= minHeight; i++ {
+		if compareBlockWithNeighbor(bc.getBlockByHeight(i), node) {
+			// TODO write sth
+			break
+		} else {
+			Error.Fatal("Independent blockchain detected. Program exit.")
+			os.Exit(1)
 		}
-		defer conn.Close()
-
-		_, err = io.Copy(conn, bytes.NewReader(data))
-		if err != nil {
-			Error.Panic(err)
-		}
-
-		scanner := bufio.NewScanner(bufio.NewReader(conn))
-		scanner.Scan()
-		msAsBytes := scanner.Bytes()
-		msResponse := deserializeMessage(msAsBytes)
-		block := deserializeBlock(msResponse.Data)
-		bc.addBlock(block)
-
-		myHeight++
 	}
-	return &bc
+
+	if myHeight < neighborHeight {
+		for i := myHeight + 1; i <= neighborHeight; i++ {
+			pullBlockFromNeighbor(bc, node, i)
+		}
+	} else if myHeight > neighborHeight {
+		// TODO spread height
+	}
+	return true
+}
+
+func compareBlockWithNeighbor(b *Block, node Node) bool {
+	ms := createMsRequestHeaderValidation(b.Header)
+	data := ms.serialize()
+
+	conn, err := net.Dial("tcp", node.Address)
+
+	if err != nil {
+		Error.Printf("%s is not avaiable\n", node.Address)
+		return false
+	}
+	defer conn.Close()
+
+	_, err = io.Copy(conn, bytes.NewReader(data))
+	if err != nil {
+		Error.Panic(err)
+	}
+
+	scanner := bufio.NewScanner(bufio.NewReader(conn))
+	scanner.Scan()
+	msAsBytes := scanner.Bytes()
+	msResponse := deserializeMessage(msAsBytes)
+
+	Error.Printf("Message : %s", msAsBytes)
+	isValid, err := strconv.ParseBool(string(msResponse.Data))
+
+	if err != nil {
+		Error.Printf("Parse failed")
+		return false
+	}
+	return isValid
+}
+
+func pullBlockFromNeighbor(bc *Blockchain, node Node, blockIndex int) {
+	ms := createMsRequestBlock(blockIndex)
+	data := ms.serialize()
+
+	conn, err := net.Dial("tcp", node.Address)
+
+	if err != nil {
+		Error.Printf("%s is not avaiable\n", node.Address)
+		return
+	}
+	defer conn.Close()
+
+	_, err = io.Copy(conn, bytes.NewReader(data))
+	if err != nil {
+		Error.Panic(err)
+	}
+
+	scanner := bufio.NewScanner(bufio.NewReader(conn))
+	scanner.Scan()
+	msAsBytes := scanner.Bytes()
+	msResponse := deserializeMessage(msAsBytes)
+	block := deserializeBlock(msResponse.Data)
+	bc.addBlock(block)
 }
 
 func getNeighborBcBestHeight(node Node) (int, error) {

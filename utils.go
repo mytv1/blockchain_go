@@ -19,3 +19,10 @@ func bytesToInt(data []byte) int {
 
 	return i
 }
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}

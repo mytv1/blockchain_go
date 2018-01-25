@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 	"os"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func startServer(bc *Blockchain) {
@@ -59,6 +61,8 @@ func handleRequest(conn net.Conn, bc *Blockchain) {
 		handleReqAddBlock(conn, bc, m)
 	case CmdSpreadHashList:
 		handleSpreadHashList(conn, bc, m)
+	case CmdReqHeaderValidation:
+		handleReqHeaderValidation(conn, bc, m)
 	default:
 		Info.Printf("Message command invalid\n")
 	}
@@ -90,5 +94,13 @@ func handleReqAddBlock(conn net.Conn, bc *Blockchain, m *Message) {
 
 func handleSpreadHashList(conn net.Conn, bc *Blockchain, m *Message) {
 	Info.Printf("Blockchain's change detected. Start sync.")
-	sendRequestBc(m.Source, *bc)
+	sendRequestBc(m.Source, bc)
+}
+
+func handleReqHeaderValidation(conn net.Conn, bc *Blockchain, m *Message) {
+	oppHeader := deserializeHeader(m.Data)
+	myBlock := bc.getBlockByHeight(oppHeader.Height)
+	result := cmp.Equal(*oppHeader, myBlock.Header)
+	responseMs := createMsResponseHeaderValidation(result)
+	conn.Write(responseMs.serialize())
 }

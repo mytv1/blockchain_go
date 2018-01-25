@@ -22,6 +22,7 @@ run:
 deps:
 	$(GOGET) github.com/urfave/cli
 	$(GOGET) github.com/boltdb/bolt/...
+	$(GOGET) github.com/google/go-cmp/cmp
 
 
 # Cross compilation

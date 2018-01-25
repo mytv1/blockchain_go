@@ -3,9 +3,12 @@ package main
 import (
 	"encoding/json"
 	"os"
+	"strconv"
 )
 
 const (
+	// PING
+
 	// CmdSpreadHashList is used to spread hash list msg to other nodes
 	CmdSpreadHashList = "SPR_HL"
 
@@ -17,11 +20,15 @@ const (
 	CmdPrintBlockchain = "REQ_PRINT_BC"
 	// CmdReqAddBlock is used to request node to add a block
 	CmdReqAddBlock = "REQ_ADD_BL"
+	// CmdReqHeaderValidation is used to request other node to valid a blocks hash list
+	CmdReqHeaderValidation = "REQ_BL_VAL"
 
 	// CmdResBestHeight is used to reponse with its own blockchain height
 	CmdResBestHeight = "RES_BH"
 	// CmdResBlock is used to response with node's single block
 	CmdResBlock = "RES_BL"
+	// CmdResHeaderValidation is used to response CmdReqHeaderValidation
+	CmdResHeaderValidation = "RES_BL_VAL"
 )
 
 // Message is used to communicate between nodes
@@ -31,47 +38,62 @@ type Message struct {
 	Source Node   `json:"Source"`
 }
 
-func createMsRequestBestHeight() *Message {
+func createBaseMessage() *Message {
 	m := new(Message)
 	m.Source = getLocalNode()
+	return m
+}
+
+func createMsRequestBestHeight() *Message {
+	m := createBaseMessage()
 	m.Cmd = CmdReqBestHeight
 	return m
 }
 
 func createMsReponseBestHeight(bestHeight int) *Message {
-	m := new(Message)
+	m := createBaseMessage()
 	m.Cmd = CmdResBestHeight
-	m.Source = getLocalNode()
 	m.Data = intToBytes(bestHeight)
 	return m
 }
 
 func createMsRequestBlock(index int) *Message {
-	m := new(Message)
+	m := createBaseMessage()
 	m.Cmd = CmdReqBlock
-	m.Source = getLocalNode()
 	m.Data = intToBytes(index)
 	return m
 }
 
 func createMsResponseBlock(block *Block) *Message {
-	m := new(Message)
+	m := createBaseMessage()
 	m.Cmd = CmdResBlock
-	m.Source = getLocalNode()
 	m.Data = block.serialize()
 	return m
 }
 
 func createMsSpreadHashList(hashList [][]byte) *Message {
-	m := new(Message)
+	m := createBaseMessage()
 	m.Cmd = CmdSpreadHashList
-	m.Source = getLocalNode()
 	data, err := json.Marshal(hashList)
 	if err != nil {
 		Error.Panic("Marshal fail")
 		os.Exit(1)
 	}
 	m.Data = data
+	return m
+}
+
+func createMsRequestHeaderValidation(blockHeader Header) *Message {
+	m := createBaseMessage()
+	m.Cmd = CmdReqHeaderValidation
+	m.Data = blockHeader.serialize()
+	return m
+}
+
+func createMsResponseHeaderValidation(isValid bool) *Message {
+	m := createBaseMessage()
+	m.Cmd = CmdResHeaderValidation
+	m.Data = []byte(strconv.FormatBool(isValid))
 	return m
 }
 

@@ -42,8 +42,9 @@ func execStartCmd(c *cli.Context, configPath string) {
 	initConfig(configPath)
 	bc := getLocalBc()
 	if bc == nil {
-		bc = getNeighborBc()
+		bc = createEmptyBlockchain()
 	}
+	syncWithNeighborNode(bc)
 
 	if bc.isEmpty() {
 		bc.addBlock(newGenesisBlock())

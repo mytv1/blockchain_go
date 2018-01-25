@@ -38,7 +38,7 @@ func (i *BlockchainIterator) next() *Block {
 		Error.Panic(err)
 	}
 
-	i.currentHash = block.PrevBlockHash
+	i.currentHash = block.Header.PrevBlockHash
 
 	return block
 }
@@ -71,7 +71,7 @@ func (bc *Blockchain) String() string {
 	for {
 		block := bci.next()
 		strBlock := fmt.Sprintf("%v", block)
-		strBlockchain += "[" + strconv.Itoa(block.Height) + "]  "
+		strBlockchain += "[" + strconv.Itoa(block.Header.Height) + "]  "
 		strBlockchain += strBlock
 		strBlockchain += "\n"
 
@@ -88,22 +88,25 @@ func (bc *Blockchain) addBlock(block *Block) {
 
 	if !pow.validate() {
 		nonce, hash := pow.run()
-		block.Nonce = nonce
-		block.Hash = hash[:]
+		block.Header.Nonce = nonce
+		block.Header.Hash = hash[:]
 	}
 
 	err := bc.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blocksBucketName))
 
 		if bc.isEmpty() {
-			bc.putBlock(b, block.Hash, block.serialize())
+			bc.putBlock(b, block.Header.Hash, block.serialize())
 		} else {
 			lastHash := b.Get([]byte("l"))
 			encodedLastBlock := b.Get(lastHash)
 			lastBlock := deserializeBlock(encodedLastBlock)
 
-			if block.Height > lastBlock.Height && bytes.Compare(block.PrevBlockHash, lastBlock.Hash) == 0 {
-				bc.putBlock(b, block.Hash, block.serialize())
+			if block.Header.Height > lastBlock.Header.Height && bytes.Compare(block.Header.PrevBlockHash, lastBlock.Header.Hash) == 0 {
+				bc.putBlock(b, block.Header.Hash, block.serialize())
+			} else {
+				Error.Printf("Block invalid. Failed to add block. : \n%v\n", block)
+
 			}
 		}
 
@@ -128,7 +131,7 @@ func (bc *Blockchain) putBlock(b *bolt.Bucket, blockHash, blockData []byte) {
 }
 
 func createEmptyBlockchain() *Blockchain {
-	if isBLockchainExist() {
+	if isDbExists(dbFileName) {
 		fmt.Println("Blockchain already exists.")
 		return nil
 	}
@@ -185,7 +188,7 @@ func (bc *Blockchain) getBestHeight() int {
 		return 0
 	}
 
-	return lastBlock.Height
+	return lastBlock.Header.Height
 }
 
 func (bc *Blockchain) getHashList() [][]byte {
@@ -195,17 +198,13 @@ func (bc *Blockchain) getHashList() [][]byte {
 	for {
 		block := bci.next()
 
-		hashList = append(hashList, block.Hash)
+		hashList = append(hashList, block.Header.Hash)
 
 		if block.isGenesisBlock() {
 			break
 		}
 	}
 	return hashList
-}
-
-func isBLockchainExist() bool {
-	return isDbExists(dbFileName)
 }
 
 func isDbExists(dbFile string) bool {
@@ -222,7 +221,7 @@ func (bc *Blockchain) getBlockByHeight(height int) *Block {
 	for {
 		block := bci.next()
 
-		if block.Height == height {
+		if block.Header.Height == height {
 			return block
 		}
 
