@@ -32,8 +32,9 @@ func (b Block) String() string {
 	strBlock += fmt.Sprintf("Prev hash: %x\n", b.Header.PrevBlockHash)
 	strBlock += fmt.Sprintf("Data: %s\n", b.Data)
 	strBlock += fmt.Sprintf("Hash: %x\n", b.Header.Hash)
-	strBlock += fmt.Sprintf("Nonce: %x\n", b.Header.Nonce)
-	strBlock += fmt.Sprintf("Height: %x\n", b.Header.Height)
+	strBlock += fmt.Sprintf("Nonce: %d\n", b.Header.Nonce)
+	strBlock += fmt.Sprintf("Height: %d\n", b.Header.Height)
+	strBlock += fmt.Sprintf("Timestamp: %d\n", b.Header.Timestamp)
 	return strBlock
 }
 
@@ -47,7 +48,7 @@ func (b *Block) setHash() {
 
 // mine block
 func newBlock(data string, prevBlockHash []byte, height int) *Block {
-	block := &Block{[]byte(data), Header{time.Now().Unix(), prevBlockHash, []byte{}, height, 0}}
+	block := &Block{[]byte(data), Header{time.Now().Unix(), []byte{}, prevBlockHash, height, 0}}
 	block.setHash()
 	return block
 }

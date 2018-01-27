@@ -106,7 +106,7 @@ func (bc *Blockchain) addBlock(block *Block) {
 				bc.putBlock(b, block.Header.Hash, block.serialize())
 			} else {
 				Error.Printf("Block invalid. Failed to add block. : \n%v\n", block)
-
+				Error.Printf("Last bl. : \n%v\n", lastBlock)
 			}
 		}
 
@@ -235,7 +235,6 @@ func (bc *Blockchain) getBlockByHeight(height int) *Block {
 
 func getLocalBc() *Blockchain {
 	if !isDbExists(dbFileName) {
-		Info.Printf("Local blockchain not exists")
 		return nil
 	}
 
