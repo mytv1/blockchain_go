@@ -58,7 +58,6 @@ func (b *Block) isGenesisBlock() bool {
 }
 
 func newGenesisBlock() *Block {
-	// add proof of work
 	return newBlock("Genesis block", []byte{}, 1)
 }
 
