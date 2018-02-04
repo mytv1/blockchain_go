@@ -7,11 +7,16 @@ Fork from https://github.com/Jeiwan/blockchain_go
 This is part 1 of my articles about my blockchain's implement tutorial below :
 
 1. [Basic prototype](https://github.com/mytv1/blockchain_go/tree/part_1)
-2. [Network](https://github.com/mytv1/blockchain_go/tree/part_2)
+2. [Network + CLI](https://github.com/mytv1/blockchain_go/tree/part_2)
+3. [Persistent + Proof of work](https://github.com/mytv1/blockchain_go/tree/part_3)
 
 I'm not good at English. So please tell me if there is something make you hard to understand.
 
 I'm also new in Golang and Blockchain. So if you spot any problem in my code, please feel free to correct it.
+
+My vietnamese articles about implements : https://kipalog.com/posts/Xay-dung-blockchain-don-gian-voi-golang--P1---Cau-truc-co-ban
+https://kipalog.com/posts/Xay-dung-blockchain-don-gian-voi-golang--P2---CLI---Network
+https://kipalog.com/posts/Xay-dung-blockchain-don-gian-voi-golang--P3---Persistent---Proof-Of-Work
 
 # Contents
 - [Introduction](#introduction)
