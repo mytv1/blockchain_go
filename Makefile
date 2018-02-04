@@ -23,6 +23,8 @@ deps:
 	$(GOGET) github.com/urfave/cli
 	$(GOGET) github.com/boltdb/bolt/...
 	$(GOGET) github.com/google/go-cmp/cmp
+	$(GOGET) golang.org/x/crypto/ripemd160
+	$(GOGET) github.com/btcsuite/btcutil
 
 
 # Cross compilation
