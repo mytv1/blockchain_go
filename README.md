@@ -17,9 +17,10 @@ I'm also new in Golang and Blockchain. So if you spot any problem in my code, pl
 
 TODO memo :
 Part 4:
-1. Wallet creating mechanism with command line. (Like `simplebc cw`)
-2. Wallet private key storage in config.json (No sercurity - but easy to learning)
+- [x] Wallet creating mechanism with command line. (Like `simplebc cw`)
+- [x] Wallet private key storage in config.json (No sercurity - but easy to learning)
+- [ ] Command to node for address printing
 
 Part 5:
-1. Create a transaction by command line. (Like `simplebc tx -from addr1 -to addr2`)
-2. Send that transaction to a node.
+- [ ] Create a transaction by command line. (Like `simplebc tx -from addr1 -to addr2`)
+- [ ] Send that transaction to a node.

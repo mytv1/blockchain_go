@@ -11,7 +11,9 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/x509"
 	"log"
+	"os"
 
 	"github.com/btcsuite/btcutil/base58"
 	"golang.org/x/crypto/ripemd160"
@@ -25,6 +27,14 @@ const addressChecksumLen = 4
 type Wallet struct {
 	PrivateKey ecdsa.PrivateKey
 	PublicKey  []byte
+	Address    string
+}
+
+// StorableWallet is brief type of Wallet, which can be stored to paper
+type StorableWallet struct {
+	PrivateKey string `json:"private_key"`
+	PublicKey  string `json:"public_key"`
+	Address    string `json:"address"`
 }
 
 func newWallet() *Wallet {
@@ -37,12 +47,13 @@ func newWallet() *Wallet {
 
 	publicKeyFirst33Bytes := append([]byte{publicKeyPrefix}, privateKey.PublicKey.X.Bytes()...)
 	publicKey := append(publicKeyFirst33Bytes, privateKey.PublicKey.Y.Bytes()...)
+	address := generateAddress(publicKey)
 
-	return &Wallet{*privateKey, publicKey}
+	return &Wallet{*privateKey, publicKey, address}
 }
 
-func (w Wallet) getAddress() string {
-	publicKeyHash := hashPublicKey(w.PublicKey)
+func generateAddress(publicKey []byte) string {
+	publicKeyHash := hashPublicKey(publicKey)
 
 	versionPayload := append([]byte{networkVersion}, publicKeyHash...)
 	checksum := publickeyChecksum(versionPayload)
@@ -81,4 +92,17 @@ func publickeyChecksum(payload []byte) []byte {
 	secondSHA := sha256.Sum256(firstSHA[:])
 
 	return secondSHA[:addressChecksumLen]
+}
+
+func (w *Wallet) toStorable() *StorableWallet {
+	sWallet := new(StorableWallet)
+	marshaledPrivateKey, err := x509.MarshalECPrivateKey(&w.PrivateKey)
+	if err != nil {
+		Error.Println(err.Error())
+		os.Exit(1)
+	}
+	sWallet.PrivateKey = base58.Encode(marshaledPrivateKey)
+	sWallet.PublicKey = base58.Encode(w.PublicKey)
+	sWallet.Address = w.Address
+	return sWallet
 }

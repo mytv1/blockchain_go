@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/urfave/cli"
 )
 
@@ -23,10 +25,15 @@ func initCreateWalletCLI(app *cli.App) {
 		Aliases: []string{"cw"},
 		Usage:   "start server",
 		Action: func(c *cli.Context) error {
-			// wallet := newWallet()
-			// Debug.Printf("%d \n%x\n%s", len(wallet.PublicKey), string(wallet.PublicKey), wallet.getAddress())
+			config := initConfig(defaultConfigPath)
+			wallet := newWallet()
 
-			// Debug.Printf("1 %s", base58.Encode(wallet.PrivateKey.D.Bytes()))
+			config.SWallet = *wallet.toStorable()
+			config.exportConfig(defaultConfigPath)
+			fmt.Printf("New wallet is created successfully! Wallet is exported to : * %s *\n", defaultConfigPath)
+			fmt.Printf("  + Private Key : %s\n", config.SWallet.PrivateKey)
+			fmt.Printf("  + Public Key : %s\n", config.SWallet.PublicKey)
+			fmt.Printf("  + Address : %s\n", config.SWallet.Address)
 			return nil
 		},
 	})

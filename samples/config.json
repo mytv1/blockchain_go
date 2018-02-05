@@ -7,5 +7,10 @@
 			{"address": "localhost:3332"},
 			{"address": "localhost:3333"}
 		]
+	},
+	"wallet": {
+		"private_key": "",
+		"public_key": "",
+		"address": ""
 	}
 }

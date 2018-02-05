@@ -12,16 +12,17 @@ const (
 
 // Config contains program's configuration information
 type Config struct {
-	Nw Network `json:"network"`
+	Nw      Network        `json:"network"`
+	SWallet StorableWallet `json:"wallet"`
 }
 
-var config Config
+var config *Config
 
-func getConfig() Config {
+func getConfig() *Config {
 	return config
 }
 
-func initConfig(configPathCLI string) {
+func initConfig(configPathCLI string) *Config {
 	var configPath string
 	if configPathCLI != "" {
 		configPath = configPathCLI
@@ -30,9 +31,10 @@ func initConfig(configPathCLI string) {
 	}
 
 	config = importConfig(configPath)
+	return config
 }
 
-func importConfig(filePath string) Config {
+func importConfig(filePath string) *Config {
 	file, e := ioutil.ReadFile(filePath)
 	if e != nil {
 		Error.Println(e.Error())
@@ -45,5 +47,19 @@ func importConfig(filePath string) Config {
 		Error.Println(e.Error())
 		os.Exit(1)
 	}
-	return config
+	return &config
+}
+
+func (config *Config) exportConfig(filePath string) {
+	prettyMarshal, e := json.MarshalIndent(config, "", "  ")
+	if e != nil {
+		Error.Println(e.Error())
+		os.Exit(1)
+	}
+
+	e = ioutil.WriteFile(filePath, prettyMarshal, 0644)
+	if e != nil {
+		Error.Println(e.Error())
+		os.Exit(1)
+	}
 }
