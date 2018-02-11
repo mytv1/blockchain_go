@@ -13,14 +13,4 @@ This is part 4 of my articles about my blockchain's implement tutorial below :
 
 I'm not good at English. So please tell me if there is something make you hard to understand.
 
-I'm also new in Golang and Blockchain. So if you spot any problem in my code, please feel free to correct it.
-
-TODO memo :
-Part 4:
-- [x] Wallet creating mechanism with command line. (Like `simplebc cw`)
-- [x] Wallet private key storage in config.json (No sercurity - but easy to learning)
-- [ ] Command to node for address printing
-
-Part 5:
-- [ ] Create a transaction by command line. (Like `simplebc tx -from addr1 -to addr2`)
-- [ ] Send that transaction to a node.
+I'm also new in Golang and Blockchain. So if you spot any problem in my code, please feel free to correct it.\

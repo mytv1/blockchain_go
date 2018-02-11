@@ -63,6 +63,8 @@ func handleRequest(conn net.Conn, bc *Blockchain) {
 		handleSpreadHashList(conn, bc, m)
 	case CmdReqHeaderValidation:
 		handleReqHeaderValidation(conn, bc, m)
+	case CmdReqAddress:
+		handleReqAddress(conn, m)
 	default:
 		Info.Printf("Message command invalid\n")
 	}
@@ -103,4 +105,10 @@ func handleReqHeaderValidation(conn net.Conn, bc *Blockchain, m *Message) {
 	result := cmp.Equal(*oppHeader, myBlock.Header)
 	responseMs := createMsResponseHeaderValidation(result)
 	conn.Write(responseMs.serialize())
+}
+
+func handleReqAddress(conn net.Conn, m *Message) {
+	responseMs := createMsResponseAddress()
+	conn.Write(responseMs.serialize())
+	Info.Printf("My Address : %s", getConfig().SWallet.Address)
 }

@@ -20,6 +20,8 @@ const (
 	CmdPrintBlockchain = "REQ_PRINT_BC"
 	// CmdReqAddBlock is used to request node to add a block
 	CmdReqAddBlock = "REQ_ADD_BL"
+	// CmdRequestAddress is used to request nodes address
+	CmdReqAddress = "REQ_ADDR"
 	// CmdReqHeaderValidation is used to request other node to valid a blocks hash list
 	CmdReqHeaderValidation = "REQ_BL_VAL"
 
@@ -29,6 +31,8 @@ const (
 	CmdResBlock = "RES_BL"
 	// CmdResHeaderValidation is used to response CmdReqHeaderValidation
 	CmdResHeaderValidation = "RES_BL_VAL"
+	// CmdResHeaderValidation is used to response CmdReqHeaderValidation
+	CmdResAddress = "RES_ADDR"
 )
 
 // Message is used to communicate between nodes
@@ -68,6 +72,18 @@ func createMsResponseBlock(block *Block) *Message {
 	m := createBaseMessage()
 	m.Cmd = CmdResBlock
 	m.Data = block.serialize()
+	return m
+}
+
+func createMsRequestAddress() *Message {
+	m := createBaseMessage()
+	m.Cmd = CmdReqAddress
+	return m
+}
+
+func createMsResponseAddress() *Message {
+	m := createBaseMessage()
+	m.Cmd = CmdResAddress
 	return m
 }
 

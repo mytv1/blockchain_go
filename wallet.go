@@ -12,6 +12,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/x509"
+	"fmt"
 	"log"
 	"os"
 
@@ -105,4 +106,12 @@ func (w *Wallet) toStorable() *StorableWallet {
 	sWallet.PublicKey = base58.Encode(w.PublicKey)
 	sWallet.Address = w.Address
 	return sWallet
+}
+
+func (sW StorableWallet) String() string {
+	strWallet := fmt.Sprint("\n  ** Wallet Information ** \n")
+	strWallet += fmt.Sprintf("  + Private Key : %s\n", sW.PrivateKey)
+	strWallet += fmt.Sprintf("  + Public Key : %s\n", sW.PublicKey)
+	strWallet += fmt.Sprintf("  + Address : %s\n", sW.Address)
+	return strWallet
 }

@@ -31,9 +31,7 @@ func initCreateWalletCLI(app *cli.App) {
 			config.SWallet = *wallet.toStorable()
 			config.exportConfig(defaultConfigPath)
 			fmt.Printf("New wallet is created successfully! Wallet is exported to : * %s *\n", defaultConfigPath)
-			fmt.Printf("  + Private Key : %s\n", config.SWallet.PrivateKey)
-			fmt.Printf("  + Public Key : %s\n", config.SWallet.PublicKey)
-			fmt.Printf("  + Address : %s\n", config.SWallet.Address)
+			fmt.Printf("%s\n", config.SWallet)
 			return nil
 		},
 	})
