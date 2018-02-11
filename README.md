@@ -7,8 +7,10 @@ Fork from https://github.com/Jeiwan/blockchain_go
 This is part 1 of my articles about my blockchain's implement tutorial below :
 
 1. [Basic prototype](https://github.com/mytv1/blockchain_go/tree/part_1)
-2. [Network + CLI](https://github.com/mytv1/blockchain_go/tree/part_2)
-3. [Persistent + Proof of work](https://github.com/mytv1/blockchain_go/tree/part_3)
+2. [Network](https://github.com/mytv1/blockchain_go/tree/part_2)
+3. [Proof of work](https://github.com/mytv1/blockchain_go/tree/part_3)
+4. [Wallet + Address](https://github.com/mytv1/blockchain_go/tree/part_4)
+5. [Transaction](https://github.com/mytv1/blockchain_go/tree/part_5)
 
 I'm not good at English. So please tell me if there is something make you hard to understand.
 
