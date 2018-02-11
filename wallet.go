@@ -129,9 +129,9 @@ func (sw *StorableWallet) toWallet() *Wallet {
 
 func (sW StorableWallet) String() string {
 	strWallet := fmt.Sprint("\n  ** Wallet Information ** \n")
-	strWallet += fmt.Sprintf("  + Private Key : %s\n", sW.PrivateKey)
-	strWallet += fmt.Sprintf("  + Public Key : %s\n", sW.PublicKey)
-	strWallet += fmt.Sprintf("  + Address : %s\n", sW.Address)
+	strWallet += fmt.Sprintf("  + Private Key (%d bytes) : %s\n", len(sW.PrivateKey), sW.PrivateKey)
+	strWallet += fmt.Sprintf("  + Public Key (%d bytes) : %s\n", len(sW.PublicKey), sW.PublicKey)
+	strWallet += fmt.Sprintf("  + Address (%d bytes) : %s\n", len(sW.Address), sW.Address)
 	return strWallet
 }
 
