@@ -10,7 +10,12 @@ This is part 4 of my articles about my blockchain's implement tutorial below :
 2. [Network](https://github.com/mytv1/blockchain_go/tree/part_2)
 3. [Proof of work](https://github.com/mytv1/blockchain_go/tree/part_3)
 4. [Wallet + Address](https://github.com/mytv1/blockchain_go/tree/part_4)
+5. [Transaction](https://github.com/mytv1/blockchain_go/tree/part_5)
 
 I'm not good at English. So please tell me if there is something make you hard to understand.
 
-I'm also new in Golang and Blockchain. So if you spot any problem in my code, please feel free to correct it.\
+I'm also new in Golang and Blockchain. So if you spot any problem in my code, please feel free to correct it.
+
+Part 5:
+- [ ] Create a transaction by command line. (Like `simplebc tx -from addr1 -to addr2`)
+- [ ] Send that transaction to a node.
