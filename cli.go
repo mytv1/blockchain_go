@@ -27,7 +27,6 @@ func initCreateWalletCLI(app *cli.App) {
 		Action: func(c *cli.Context) error {
 			config := initConfig(defaultConfigPath)
 			wallet := newWallet()
-
 			config.SWallet = *wallet.toStorable()
 			config.exportConfig(defaultConfigPath)
 			fmt.Printf("New wallet is created successfully! Wallet is exported to : * %s *\n", defaultConfigPath)

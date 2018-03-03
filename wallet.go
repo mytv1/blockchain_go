@@ -11,9 +11,11 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
-	"crypto/x509"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"log"
+	"math/big"
 	"os"
 
 	"github.com/btcsuite/btcutil/base58"
@@ -97,21 +99,47 @@ func publickeyChecksum(payload []byte) []byte {
 
 func (w *Wallet) toStorable() *StorableWallet {
 	sWallet := new(StorableWallet)
-	marshaledPrivateKey, err := x509.MarshalECPrivateKey(&w.PrivateKey)
-	if err != nil {
-		Error.Println(err.Error())
-		os.Exit(1)
-	}
-	sWallet.PrivateKey = base58.Encode(marshaledPrivateKey)
-	sWallet.PublicKey = base58.Encode(w.PublicKey)
+	sWallet.PrivateKey = hex.EncodeToString(w.PrivateKey.D.Bytes())
+	sWallet.PublicKey = hex.EncodeToString(w.PublicKey)
 	sWallet.Address = w.Address
 	return sWallet
 }
 
+func (sw *StorableWallet) toWallet() *Wallet {
+	w := new(Wallet)
+	curve := elliptic.P256()
+	privateKeyAsBytes, err := hex.DecodeString(sw.PrivateKey)
+	if err != nil {
+		Error.Fatal(err.Error)
+		os.Exit(1)
+	}
+
+	w.PrivateKey.D = new(big.Int).SetBytes(privateKeyAsBytes)
+	w.PrivateKey.PublicKey.Curve = curve
+	w.PrivateKey.PublicKey.X, w.PrivateKey.PublicKey.Y = curve.ScalarBaseMult(privateKeyAsBytes)
+	w.PublicKey, err = hex.DecodeString(sw.PublicKey)
+	if err != nil {
+		Error.Fatal(err.Error)
+		os.Exit(1)
+	}
+
+	w.Address = sw.Address
+	return w
+}
+
 func (sW StorableWallet) String() string {
 	strWallet := fmt.Sprint("\n  ** Wallet Information ** \n")
-	strWallet += fmt.Sprintf("  + Private Key : %s\n", sW.PrivateKey)
-	strWallet += fmt.Sprintf("  + Public Key : %s\n", sW.PublicKey)
-	strWallet += fmt.Sprintf("  + Address : %s\n", sW.Address)
+	strWallet += fmt.Sprintf("  + Private Key (%d bytes) : %s\n", len(sW.PrivateKey), sW.PrivateKey)
+	strWallet += fmt.Sprintf("  + Public Key (%d bytes) : %s\n", len(sW.PublicKey), sW.PublicKey)
+	strWallet += fmt.Sprintf("  + Address (%d bytes) : %s\n", len(sW.Address), sW.Address)
 	return strWallet
+}
+
+func (w Wallet) String() string {
+	bs, err := json.MarshalIndent(w, "", "   ")
+	if err != nil {
+		Error.Fatal(err.Error)
+		os.Exit(1)
+	}
+	return string(bs)
 }
