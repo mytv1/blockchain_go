@@ -4,7 +4,7 @@ My simple implement of blockchain with Golang.
 Fork from https://github.com/Jeiwan/blockchain_go
 (Many thanks to Jeiwan!)
 
-This is part 4 of my articles about my blockchain's implement tutorial below :
+This is part 5 of my articles about my blockchain's implement tutorial below :
 
 1. [Basic prototype](https://github.com/mytv1/blockchain_go/tree/part_1)
 2. [Network](https://github.com/mytv1/blockchain_go/tree/part_2)

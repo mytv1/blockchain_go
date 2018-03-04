@@ -20,10 +20,12 @@ const (
 	CmdPrintBlockchain = "REQ_PRINT_BC"
 	// CmdReqAddBlock is used to request node to add a block
 	CmdReqAddBlock = "REQ_ADD_BL"
-	// CmdRequestAddress is used to request nodes address
+	// CmdReqAddress is used to request nodes address
 	CmdReqAddress = "REQ_ADDR"
 	// CmdReqHeaderValidation is used to request other node to valid a blocks hash list
 	CmdReqHeaderValidation = "REQ_BL_VAL"
+	// CmdReqPrintAllAddressInfo is used to request other node to valid a blocks hash list
+	CmdReqPrintAllAddressInfo = "REQ_ALL_ADDR"
 
 	// CmdResBestHeight is used to reponse with its own blockchain height
 	CmdResBestHeight = "RES_BH"
@@ -31,7 +33,7 @@ const (
 	CmdResBlock = "RES_BL"
 	// CmdResHeaderValidation is used to response CmdReqHeaderValidation
 	CmdResHeaderValidation = "RES_BL_VAL"
-	// CmdResHeaderValidation is used to response CmdReqHeaderValidation
+	// CmdResAddress is used to response CmdReqHeaderValidation
 	CmdResAddress = "RES_ADDR"
 )
 

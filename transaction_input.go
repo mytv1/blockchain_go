@@ -1,14 +1,24 @@
 package main
 
-import "bytes"
+import (
+	"fmt"
+)
 
+// TxInput is input component of a transaction
 type TxInput struct {
-	Txid       []byte
-	TxOutIndex int
-	Signature  []byte
+	Txid      []byte
+	TxOutIdx  int
+	Signature []byte
 }
 
-func (in *TXInput) usesKey(publicKeyHash []byte) bool {
-	lockingHash := hashPublicKey(in.PubKey)
-	return bytes.Compare(lockingHash, publicKeyHash) == 0
+func (txInput TxInput) String() string {
+	str := fmt.Sprintf("Txid : %s\n", txInput.Txid)
+	str += fmt.Sprintf("      TxOutIdx : %d\n", txInput.TxOutIdx)
+	str += fmt.Sprintf("      Signature : %x\n", txInput.Signature)
+	return str
 }
+
+// func (in *TxInput) usesKey(publicKeyHash []byte) bool {
+// 	lockingHash := hashPublicKey(in.PubKey)
+// 	return bytes.Compare(lockingHash, publicKeyHash) == 0
+// }

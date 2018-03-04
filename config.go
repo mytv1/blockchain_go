@@ -31,6 +31,8 @@ func initConfig(configPathCLI string) *Config {
 	}
 
 	config = importConfig(configPath)
+	wallet = config.SWallet.toWallet()
+	setWallet(wallet)
 	return config
 }
 

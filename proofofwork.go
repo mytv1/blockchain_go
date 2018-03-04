@@ -32,7 +32,7 @@ func (pow *ProofOfWork) prepareData(nonce int) []byte {
 	data := bytes.Join(
 		[][]byte{
 			pow.block.Header.PrevBlockHash,
-			pow.block.Data,
+			pow.block.hashTransactions(),
 			intToBytes(int(pow.block.Header.Timestamp)),
 			intToBytes(nonce),
 		},

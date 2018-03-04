@@ -40,6 +40,16 @@ type StorableWallet struct {
 	Address    string `json:"address"`
 }
 
+var wallet *Wallet
+
+func setWallet(w *Wallet) {
+	wallet = w
+}
+
+func getWallet() *Wallet {
+	return wallet
+}
+
 func newWallet() *Wallet {
 	curve := elliptic.P256()
 
@@ -50,13 +60,13 @@ func newWallet() *Wallet {
 
 	publicKeyFirst33Bytes := append([]byte{publicKeyPrefix}, privateKey.PublicKey.X.Bytes()...)
 	publicKey := append(publicKeyFirst33Bytes, privateKey.PublicKey.Y.Bytes()...)
-	address := generateAddress(publicKey)
+	publicKeyHash := hashPublicKey(publicKey)
+	address := generateAddress(publicKeyHash)
 
 	return &Wallet{*privateKey, publicKey, address}
 }
 
-func generateAddress(publicKey []byte) string {
-	publicKeyHash := hashPublicKey(publicKey)
+func generateAddress(publicKeyHash []byte) string {
 
 	versionPayload := append([]byte{networkVersion}, publicKeyHash...)
 	checksum := publickeyChecksum(versionPayload)
@@ -105,25 +115,25 @@ func (w *Wallet) toStorable() *StorableWallet {
 	return sWallet
 }
 
-func (sw *StorableWallet) toWallet() *Wallet {
+func (sW *StorableWallet) toWallet() *Wallet {
 	w := new(Wallet)
 	curve := elliptic.P256()
-	privateKeyAsBytes, err := hex.DecodeString(sw.PrivateKey)
+	privateKeyAsBytes, err := hex.DecodeString(sW.PrivateKey)
 	if err != nil {
-		Error.Fatal(err.Error)
+		Error.Fatal(err.Error())
 		os.Exit(1)
 	}
 
 	w.PrivateKey.D = new(big.Int).SetBytes(privateKeyAsBytes)
 	w.PrivateKey.PublicKey.Curve = curve
 	w.PrivateKey.PublicKey.X, w.PrivateKey.PublicKey.Y = curve.ScalarBaseMult(privateKeyAsBytes)
-	w.PublicKey, err = hex.DecodeString(sw.PublicKey)
+	w.PublicKey, err = hex.DecodeString(sW.PublicKey)
 	if err != nil {
-		Error.Fatal(err.Error)
+		Error.Fatal(err.Error())
 		os.Exit(1)
 	}
 
-	w.Address = sw.Address
+	w.Address = sW.Address
 	return w
 }
 
@@ -138,7 +148,7 @@ func (sW StorableWallet) String() string {
 func (w Wallet) String() string {
 	bs, err := json.MarshalIndent(w, "", "   ")
 	if err != nil {
-		Error.Fatal(err.Error)
+		Error.Fatal(err.Error())
 		os.Exit(1)
 	}
 	return string(bs)

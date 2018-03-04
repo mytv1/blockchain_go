@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -65,6 +66,8 @@ func handleRequest(conn net.Conn, bc *Blockchain) {
 		handleReqHeaderValidation(conn, bc, m)
 	case CmdReqAddress:
 		handleReqAddress(conn, m)
+	case CmdReqPrintAllAddressInfo:
+		handleReqPrintAllAddressInfo(conn, bc, m)
 	default:
 		Info.Printf("Message command invalid\n")
 	}
@@ -85,13 +88,15 @@ func handleReqBlock(conn net.Conn, bc *Blockchain, m *Message) {
 }
 
 func handlePrintBlockchain(bc *Blockchain) {
-	Info.Printf("\n%v", bc)
+
+	Info.Printf("\n%s", bc)
 }
 
 func handleReqAddBlock(conn net.Conn, bc *Blockchain, m *Message) {
-	block := newBlock(string(m.Data), bc.getTopBlockHash(), bc.getBestHeight()+1)
-	bc.addBlock(block)
-	spreadHashList(bc)
+	// Todo : fix this
+	// block := newBlock(string(m.Data), bc.getTopBlockHash(), bc.getBestHeight()+1)
+	// bc.addBlock(block)
+	// spreadHashList(bc)
 }
 
 func handleSpreadHashList(conn net.Conn, bc *Blockchain, m *Message) {
@@ -111,4 +116,21 @@ func handleReqAddress(conn net.Conn, m *Message) {
 	responseMs := createMsResponseAddress()
 	conn.Write(responseMs.serialize())
 	Info.Printf("My Address : %s", getConfig().SWallet.Address)
+}
+
+func handleReqPrintAllAddressInfo(conn net.Conn, bc *Blockchain, m *Message) {
+	UTXOSet := UTXOSet{bc}
+	UTXOSet.Reindex()
+	addressInfos := UTXOSet.getAllAddressInfo()
+
+	Info.Print(" All address information 	")
+	Info.Printf("|             Address                | Value |")
+	for pubKeyHashAsStr, val := range addressInfos {
+		pubKeyHash, err := hex.DecodeString(pubKeyHashAsStr)
+		if err != nil {
+			Error.Fatal(err.Error())
+		}
+		Info.Printf("| %s | %5d |", generateAddress(pubKeyHash), val)
+	}
+
 }

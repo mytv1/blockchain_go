@@ -58,6 +58,10 @@ func initStartServerCLI(app *cli.App) {
 
 func execStartCmd(c *cli.Context, configPath string) {
 	initConfig(configPath)
+	wallet := getWallet()
+
+	Info.Printf("Node address : %s", wallet.Address)
+
 	bc := getLocalBc()
 	if bc == nil {
 		Info.Printf("Local blockchain database not found. Create new empty blockchain (size = 0).")
@@ -69,7 +73,10 @@ func execStartCmd(c *cli.Context, configPath string) {
 
 	if bc.isEmpty() {
 		Info.Printf("No avaiable node for synchronization. Init new blockchain.")
-		bc.addBlock(newGenesisBlock())
+		coinbaseTx := newCoinbaseTx(wallet.Address)
+		genesisBlock := newGenesisBlock([]Transaction{*coinbaseTx})
+
+		bc.addBlock(genesisBlock)
 	}
 
 	startServer(bc)
