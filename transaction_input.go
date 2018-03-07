@@ -6,9 +6,9 @@ import (
 
 // TxInput is input component of a transaction
 type TxInput struct {
-	Txid      []byte
-	TxOutIdx  int
-	Signature []byte
+	Txid      []byte `json:"Txid"`
+	TxOutIdx  int    `json:"TxOutIdx"`
+	Signature []byte `json:"Signature"`
 }
 
 func (txInput TxInput) String() string {

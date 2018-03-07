@@ -14,6 +14,7 @@ func newCliApp() *cli.App {
 	app.Commands = []cli.Command{}
 
 	initCreateWalletCLI(app)
+	initTransactionCreatorCLI(app)
 	initStartServerCLI(app)
 
 	return app
@@ -23,7 +24,7 @@ func initCreateWalletCLI(app *cli.App) {
 	app.Commands = append(app.Commands, cli.Command{
 		Name:    "createwallet",
 		Aliases: []string{"cw"},
-		Usage:   "start server",
+		Usage:   "create a wallet",
 		Action: func(c *cli.Context) error {
 			config := initConfig(defaultConfigPath)
 			wallet := newWallet()
@@ -41,7 +42,7 @@ func initStartServerCLI(app *cli.App) {
 	app.Flags = append(app.Flags, cli.StringFlag{
 		Name:        "config, c",
 		Value:       defaultConfigPath,
-		Usage:       "Load configuration form `FILE`",
+		Usage:       "Load configuration from `FILE`",
 		Destination: &configPath,
 	})
 
@@ -52,6 +53,30 @@ func initStartServerCLI(app *cli.App) {
 		Action: func(c *cli.Context) error {
 			execStartCmd(c, configPath)
 			return nil
+		},
+	})
+}
+
+func initTransactionCreatorCLI(app *cli.App) {
+	var toAddr string
+	var value int
+	app.Commands = append(app.Commands, cli.Command{
+		Name:    "createtransaction",
+		Aliases: []string{"ct"},
+		Usage:   " ct -to {address} -v {coin}",
+		Action: func(c *cli.Context) error {
+			execTransactionCreator(c, toAddr, value)
+			return nil
+		},
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:        "to",
+				Destination: &toAddr,
+			},
+			cli.IntFlag{
+				Name:        "v",
+				Destination: &value,
+			},
 		},
 	})
 }
@@ -81,4 +106,8 @@ func execStartCmd(c *cli.Context, configPath string) {
 
 	startServer(bc)
 	defer bc.db.Close()
+}
+
+func execTransactionCreator(c *cli.Context, toAddr string, value int) {
+	Info.Printf("Make transaction to send %d coins to address %s", value, toAddr)
 }

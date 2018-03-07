@@ -11,8 +11,8 @@ import (
 
 // TxOutput is output component of a transaction
 type TxOutput struct {
-	Value      int
-	PubKeyHash []byte
+	Value      int    `json:"Value"`
+	PubKeyHash []byte `json:"PubKeyHash"`
 }
 
 func (txOut *TxOutput) lock(address string) {

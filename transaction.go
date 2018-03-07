@@ -15,9 +15,9 @@ const subsidy = 25
 
 // Transaction represent a transaction between wallets
 type Transaction struct {
-	ID   []byte
-	Vin  []TxInput
-	Vout []TxOutput
+	ID   []byte     `json:"ID"`
+	Vin  []TxInput  `json:"Vin"`
+	Vout []TxOutput `json:"Vout"`
 }
 
 func (tx Transaction) isCoinbase() bool {
