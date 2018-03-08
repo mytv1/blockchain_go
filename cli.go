@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/urfave/cli"
 )
+
+var configPath string
 
 func newCliApp() *cli.App {
 	app := cli.NewApp()
@@ -38,7 +41,6 @@ func initCreateWalletCLI(app *cli.App) {
 }
 
 func initStartServerCLI(app *cli.App) {
-	var configPath string
 	app.Flags = append(app.Flags, cli.StringFlag{
 		Name:        "config, c",
 		Value:       defaultConfigPath,
@@ -65,7 +67,7 @@ func initTransactionCreatorCLI(app *cli.App) {
 		Aliases: []string{"ct"},
 		Usage:   " ct -to {address} -v {coin}",
 		Action: func(c *cli.Context) error {
-			execTransactionCreator(c, toAddr, value)
+			execTransactionCreator(c, configPath, toAddr, value)
 			return nil
 		},
 		Flags: []cli.Flag{
@@ -108,6 +110,16 @@ func execStartCmd(c *cli.Context, configPath string) {
 	defer bc.db.Close()
 }
 
-func execTransactionCreator(c *cli.Context, toAddr string, value int) {
+func execTransactionCreator(c *cli.Context, configPath, toAddr string, value int) {
 	Info.Printf("Make transaction to send %d coins to address %s", value, toAddr)
+	initConfig(configPath)
+	wallet := getWallet()
+	bc := getLocalBc()
+	if bc == nil {
+		Error.Print("Local blockchain not found. Need one existed first")
+		os.Exit(1)
+	}
+	transaction := bc.newTransaction(wallet, toAddr, value)
+	Info.Printf("%s", transaction)
+	defer bc.db.Close()
 }

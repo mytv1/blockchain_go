@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 
@@ -289,4 +290,44 @@ func (bc *Blockchain) findUTXO() map[string]TxOutputs {
 	}
 
 	return UTXO
+}
+
+func (bc *Blockchain) newTransaction(wallet *Wallet, to string, amount int) *Transaction {
+	var inputs []TxInput
+	var outputs []TxOutput
+
+	UTXOSet := UTXOSet{bc}
+	UTXOSet.Reindex()
+	pubKeyHash := hashPublicKey(wallet.PublicKey)
+	acc, validOutputs := UTXOSet.FindSpendableOutputs(pubKeyHash, amount)
+
+	if acc < amount {
+		log.Panic("ERROR: Not enough funds")
+	}
+
+	// Build a list of inputs
+	for txid, outs := range validOutputs {
+		txID, err := hex.DecodeString(txid)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		for _, out := range outs {
+			input := TxInput{txID, out, nil}
+			inputs = append(inputs, input)
+		}
+	}
+
+	// Build a list of outputs
+	from := fmt.Sprintf("%s", wallet.Address)
+	outputs = append(outputs, *newTxOutput(amount, to))
+	if acc > amount {
+		outputs = append(outputs, *newTxOutput(acc-amount, from)) // a change
+	}
+
+	tx := Transaction{nil, inputs, outputs}
+	tx.ID = tx.hash()
+	tx.sign(wallet.PrivateKey)
+
+	return &tx
 }

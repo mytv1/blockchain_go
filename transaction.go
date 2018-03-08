@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/gob"
-	"encoding/hex"
 	"fmt"
 	"log"
 )
@@ -66,16 +65,9 @@ func (tx *Transaction) trimmedCopy() Transaction {
 	return txCopy
 }
 
-// Sign make signature of a transaction
-func (tx *Transaction) Sign(privateKey ecdsa.PrivateKey, prevTxs map[string]Transaction) {
+func (tx *Transaction) sign(privateKey ecdsa.PrivateKey) {
 	if tx.isCoinbase() {
 		return
-	}
-
-	for _, vin := range tx.Vin {
-		if prevTxs[hex.EncodeToString(vin.Txid)].ID == nil {
-			Error.Panic("Previous transaction is not correct")
-		}
 	}
 
 	txCopy := tx.trimmedCopy()
@@ -107,12 +99,12 @@ func (tx Transaction) String() string {
 	strTx := fmt.Sprintf("\n    ID: %x\n", tx.ID)
 	strTx += fmt.Sprintf("    Vin :\n")
 	for idx, txIn := range tx.Vin {
-		strTx += fmt.Sprintf("      [%d]%v", idx, txIn)
+		strTx += fmt.Sprintf("      [%d]%v\n", idx, txIn)
 	}
 
 	strTx += fmt.Sprintf("    Vout :\n")
 	for idx, txOut := range tx.Vout {
-		strTx += fmt.Sprintf("      [%d]%v", idx, txOut)
+		strTx += fmt.Sprintf("      [%d]%v\n", idx, txOut)
 	}
 
 	return strTx
