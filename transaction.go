@@ -3,28 +3,30 @@ package main
 import (
 	"bytes"
 	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/gob"
+	"encoding/hex"
 	"fmt"
 	"log"
+	"math/big"
 )
 
 const subsidy = 25
 
 // Transaction represent a transaction between wallets
 type Transaction struct {
-	ID   []byte     `json:"ID"`
-	Vin  []TxInput  `json:"Vin"`
-	Vout []TxOutput `json:"Vout"`
+	ID     []byte     `json:"ID"`
+	TxIns  []TxInput  `json:"TxIns"`
+	TxOuts []TxOutput `json:"TxOuts"`
 }
 
 func (tx Transaction) isCoinbase() bool {
-	return len(tx.Vin) == 1 && len(tx.Vin[0].Txid) == 0 && tx.Vin[0].TxOutIdx == -1
+	return len(tx.TxIns) == 1 && len(tx.TxIns[0].Txid) == 0 && tx.TxIns[0].TxOutIdx == -1
 }
 
-// Serialize serialize a transaction
-func (tx Transaction) Serialize() []byte {
+func (tx Transaction) serialize() []byte {
 	var encoded bytes.Buffer
 
 	enc := gob.NewEncoder(&encoded)
@@ -37,13 +39,25 @@ func (tx Transaction) Serialize() []byte {
 	return encoded.Bytes()
 }
 
+func deserializeTransaction(data []byte) *Transaction {
+	var transaction Transaction
+
+	decoder := gob.NewDecoder(bytes.NewReader(data))
+	err := decoder.Decode(&transaction)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return &transaction
+}
+
 func (tx *Transaction) hash() []byte {
 	var hash [32]byte
 
 	txCopy := *tx
 	txCopy.ID = []byte{}
 
-	hash = sha256.Sum256(txCopy.Serialize())
+	hash = sha256.Sum256(txCopy.serialize())
 
 	return hash[:]
 }
@@ -52,11 +66,11 @@ func (tx *Transaction) trimmedCopy() Transaction {
 	var inputs []TxInput
 	var outputs []TxOutput
 
-	for _, vin := range tx.Vin {
-		inputs = append(inputs, TxInput{vin.Txid, vin.TxOutIdx, nil})
+	for _, vin := range tx.TxIns {
+		inputs = append(inputs, TxInput{vin.Txid, vin.TxOutIdx, nil, vin.PubKey})
 	}
 
-	for _, vout := range tx.Vout {
+	for _, vout := range tx.TxOuts {
 		outputs = append(outputs, TxOutput{vout.Value, vout.PubKeyHash})
 	}
 
@@ -80,14 +94,58 @@ func (tx *Transaction) sign(privateKey ecdsa.PrivateKey) {
 		Error.Panic(err)
 	}
 
-	for inID := range txCopy.Vin {
-		txCopy.Vin[inID].Signature = nil
-		tx.Vin[inID].Signature = signature
+	for inID := range txCopy.TxIns {
+		txCopy.TxIns[inID].Signature = nil
+		tx.TxIns[inID].Signature = signature
 	}
 }
 
+func (tx *Transaction) verifySignature() bool {
+	txCopy := tx.trimmedCopy()
+	curve := elliptic.P256()
+
+	for _, vin := range tx.TxIns {
+		publicKey := vin.PubKey
+
+		r := big.Int{}
+		s := big.Int{}
+		sigLen := len(vin.Signature)
+		r.SetBytes(vin.Signature[:(sigLen / 2)])
+		s.SetBytes(vin.Signature[(sigLen / 2):])
+
+		x := big.Int{}
+		y := big.Int{}
+		keyLen := len(publicKey) - 1
+		x.SetBytes(publicKey[1:(keyLen/2 + 1)])
+		y.SetBytes(publicKey[(keyLen/2 + 1):])
+
+		dataToVerify := fmt.Sprintf("%x", txCopy)
+
+		rawPubKey := ecdsa.PublicKey{Curve: curve, X: &x, Y: &y}
+		if ecdsa.Verify(&rawPubKey, []byte(dataToVerify), &r, &s) == false {
+			return false
+		}
+	}
+	return true
+}
+
+func (tx *Transaction) verifyValues(prevTxs map[string]Transaction) bool {
+	allInputValues := 0
+	allOutputValues := 0
+	for _, vin := range tx.TxIns {
+		prevTx := prevTxs[hex.EncodeToString(vin.Txid)]
+		allInputValues += prevTx.TxOuts[vin.TxOutIdx].Value
+	}
+
+	for _, vout := range tx.TxOuts {
+		allOutputValues += vout.Value
+	}
+
+	return allInputValues == allOutputValues
+}
+
 func newCoinbaseTx(addrTo string) *Transaction {
-	txIn := TxInput{[]byte{}, -1, nil}
+	txIn := TxInput{[]byte{}, -1, nil, []byte{}}
 	txOut := newTxOutput(subsidy, addrTo)
 	tx := Transaction{nil, []TxInput{txIn}, []TxOutput{*txOut}}
 	tx.ID = tx.hash()
@@ -98,12 +156,12 @@ func newCoinbaseTx(addrTo string) *Transaction {
 func (tx Transaction) String() string {
 	strTx := fmt.Sprintf("\n    ID: %x\n", tx.ID)
 	strTx += fmt.Sprintf("    Vin :\n")
-	for idx, txIn := range tx.Vin {
+	for idx, txIn := range tx.TxIns {
 		strTx += fmt.Sprintf("      [%d]%v\n", idx, txIn)
 	}
 
 	strTx += fmt.Sprintf("    Vout :\n")
-	for idx, txOut := range tx.Vout {
+	for idx, txOut := range tx.TxOuts {
 		strTx += fmt.Sprintf("      [%d]%v\n", idx, txOut)
 	}
 

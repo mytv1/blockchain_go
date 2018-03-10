@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -96,7 +97,6 @@ func (bc *Blockchain) addBlock(block *Block) {
 
 	err := bc.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blocksBucketName))
-
 		if bc.isEmpty() {
 			bc.putBlock(b, block.Header.Hash, block.serialize())
 		} else {
@@ -111,10 +111,8 @@ func (bc *Blockchain) addBlock(block *Block) {
 				Error.Printf("Last bl. : \n%v\n", lastBlock)
 			}
 		}
-
 		return nil
 	})
-
 	if err != nil {
 		Error.Panic(err)
 	}
@@ -249,8 +247,8 @@ func getLocalBc() *Blockchain {
 	return bc
 }
 
-func (bc *Blockchain) findUTXO() map[string]TxOutputs {
-	UTXO := make(map[string]TxOutputs)
+func (bc *Blockchain) findUTXO() map[string]TxOutputMap {
+	UTXO := make(map[string]TxOutputMap)
 	spentTXOs := make(map[string][]int)
 	bci := bc.iterator()
 
@@ -261,7 +259,7 @@ func (bc *Blockchain) findUTXO() map[string]TxOutputs {
 			txID := hex.EncodeToString(tx.ID)
 
 		Outputs:
-			for outIdx, out := range tx.Vout {
+			for outIdx, out := range tx.TxOuts {
 				// Was the output spent?
 				if spentTXOs[txID] != nil {
 					for _, spentOutIdx := range spentTXOs[txID] {
@@ -271,13 +269,16 @@ func (bc *Blockchain) findUTXO() map[string]TxOutputs {
 					}
 				}
 
-				outs := UTXO[txID]
-				outs.Outputs = append(outs.Outputs, out)
-				UTXO[txID] = outs
+				txOutputMap := UTXO[txID]
+				if txOutputMap == nil {
+					txOutputMap = make(TxOutputMap)
+				}
+				txOutputMap[outIdx] = out
+				UTXO[txID] = txOutputMap
 			}
 
 			if tx.isCoinbase() == false {
-				for _, in := range tx.Vin {
+				for _, in := range tx.TxIns {
 					inTxID := hex.EncodeToString(in.Txid)
 					spentTXOs[inTxID] = append(spentTXOs[inTxID], in.TxOutIdx)
 				}
@@ -312,8 +313,8 @@ func (bc *Blockchain) newTransaction(wallet *Wallet, to string, amount int) *Tra
 			log.Panic(err)
 		}
 
-		for _, out := range outs {
-			input := TxInput{txID, out, nil}
+		for idx := range outs {
+			input := TxInput{txID, idx, nil, wallet.PublicKey}
 			inputs = append(inputs, input)
 		}
 	}
@@ -330,4 +331,49 @@ func (bc *Blockchain) newTransaction(wallet *Wallet, to string, amount int) *Tra
 	tx.sign(wallet.PrivateKey)
 
 	return &tx
+}
+
+func (bc *Blockchain) verifyTransaction(tx *Transaction) bool {
+	if tx.isCoinbase() {
+		return true
+	}
+
+	UTXOSet := UTXOSet{bc}
+	UTXOSet.Reindex()
+
+	prevTxs := bc.findTransactionsByTx(tx)
+
+	return tx.verifySignature() && UTXOSet.verifyTxInputs(tx.TxIns) && tx.verifyValues(prevTxs)
+}
+
+func (bc *Blockchain) findTransactionsByTx(tx *Transaction) map[string]Transaction {
+	prevTxs := make(map[string]Transaction)
+	for _, vin := range tx.TxIns {
+		prevTx, err := bc.findTransaction(vin.Txid)
+		if err != nil {
+			Error.Fatal(err)
+		}
+		prevTxs[hex.EncodeToString(prevTx.ID)] = prevTx
+	}
+	return prevTxs
+}
+
+func (bc *Blockchain) findTransaction(ID []byte) (Transaction, error) {
+	bci := bc.iterator()
+
+	for {
+		block := bci.next()
+
+		for _, tx := range block.Transactions {
+			if bytes.Compare(tx.ID, ID) == 0 {
+				return tx, nil
+			}
+		}
+
+		if len(block.Header.PrevBlockHash) == 0 {
+			break
+		}
+	}
+
+	return Transaction{}, errors.New("Transaction is not found")
 }

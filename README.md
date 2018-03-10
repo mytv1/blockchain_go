@@ -15,7 +15,3 @@ This is part 5 of my articles about my blockchain's implement tutorial below :
 I'm not good at English. So please tell me if there is something make you hard to understand.
 
 I'm also new in Golang and Blockchain. So if you spot any problem in my code, please feel free to correct it.
-
-Part 5:
-- [x] Create a transaction by command line. (Like `simplebc -to {addr2} -v {value}`)
-- [ ] Marshall transaction to json and send to a node. Request to add this transaction to its blockchain.

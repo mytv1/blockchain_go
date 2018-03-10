@@ -58,8 +58,6 @@ func handleRequest(conn net.Conn, bc *Blockchain) {
 		handleReqBlock(conn, bc, m)
 	case CmdPrintBlockchain:
 		handlePrintBlockchain(bc)
-	case CmdReqAddBlock:
-		handleReqAddBlock(conn, bc, m)
 	case CmdSpreadHashList:
 		handleSpreadHashList(conn, bc, m)
 	case CmdReqHeaderValidation:
@@ -68,6 +66,8 @@ func handleRequest(conn net.Conn, bc *Blockchain) {
 		handleReqAddress(conn, m)
 	case CmdReqPrintAllAddressInfo:
 		handleReqPrintAllAddressInfo(conn, bc, m)
+	case CmdReqAddTransaction:
+		handleReqAddTransaction(conn, bc, m)
 	default:
 		Info.Printf("Message command invalid\n")
 	}
@@ -88,15 +88,23 @@ func handleReqBlock(conn net.Conn, bc *Blockchain, m *Message) {
 }
 
 func handlePrintBlockchain(bc *Blockchain) {
-
 	Info.Printf("\n%s", bc)
 }
 
-func handleReqAddBlock(conn net.Conn, bc *Blockchain, m *Message) {
-	// Todo : fix this
-	// block := newBlock(string(m.Data), bc.getTopBlockHash(), bc.getBestHeight()+1)
-	// bc.addBlock(block)
-	// spreadHashList(bc)
+func handleReqAddTransaction(conn net.Conn, bc *Blockchain, m *Message) {
+	var isSuccess bool
+	tx := deserializeTransaction(m.Data)
+	Info.Printf("Receive tx : %s", tx)
+	isSuccess = bc.verifyTransaction(tx)
+	if isSuccess == true {
+		Info.Printf("Transaction is valid. Create new block.")
+		newBlock := newBlock([]Transaction{*tx}, bc.getTopBlockHash(), bc.getBestHeight()+1)
+		bc.addBlock(newBlock)
+	} else {
+		Info.Printf("Transaction is invalid. Nothing happened.")
+	}
+	responseMs := createMsResponseAddTransaction(isSuccess)
+	conn.Write(responseMs.serialize())
 }
 
 func handleSpreadHashList(conn net.Conn, bc *Blockchain, m *Message) {

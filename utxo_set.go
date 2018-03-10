@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/hex"
 	"log"
 
@@ -15,9 +16,9 @@ type UTXOSet struct {
 }
 
 // FindSpendableOutputs finds and returns unspent outputs to reference in inputs
-func (u UTXOSet) FindSpendableOutputs(pubkeyHash []byte, amount int) (int, map[string][]int) {
-	unspentOutputs := make(map[string][]int)
-	accumulated := 0
+func (u UTXOSet) FindSpendableOutputs(pubkeyHash []byte, amount int) (int, map[string]TxOutputMap) {
+	unspentOutputs := make(map[string]TxOutputMap)
+	var accumulated int
 	db := u.Blockchain.db
 
 	err := db.View(func(tx *bolt.Tx) error {
@@ -26,12 +27,15 @@ func (u UTXOSet) FindSpendableOutputs(pubkeyHash []byte, amount int) (int, map[s
 
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			txID := hex.EncodeToString(k)
-			outs := DeserializeOutputs(v)
+			txOutputMap := DeserializeTxOutputMap(v)
 
-			for outIdx, out := range outs.Outputs {
+			for outIdx, out := range txOutputMap {
 				if out.isLockedWithKey(pubkeyHash) && accumulated < amount {
 					accumulated += out.Value
-					unspentOutputs[txID] = append(unspentOutputs[txID], outIdx)
+					if unspentOutputs[txID] == nil {
+						unspentOutputs[txID] = make(TxOutputMap)
+					}
+					unspentOutputs[txID][outIdx] = out
 				}
 			}
 		}
@@ -46,8 +50,8 @@ func (u UTXOSet) FindSpendableOutputs(pubkeyHash []byte, amount int) (int, map[s
 }
 
 // FindUTXO finds UTXO for a public key hash
-func (u UTXOSet) FindUTXO(pubKeyHash []byte) []TxOutput {
-	var UTXOs []TxOutput
+func (u UTXOSet) FindUTXO(pubKeyHash []byte) TxOutputMap {
+	UTXOs := make(TxOutputMap)
 	db := u.Blockchain.db
 
 	err := db.View(func(tx *bolt.Tx) error {
@@ -55,11 +59,11 @@ func (u UTXOSet) FindUTXO(pubKeyHash []byte) []TxOutput {
 		c := b.Cursor()
 
 		for k, v := c.First(); k != nil; k, v = c.Next() {
-			outs := DeserializeOutputs(v)
+			outs := DeserializeTxOutputMap(v)
 
-			for _, out := range outs.Outputs {
+			for idx, out := range outs {
 				if out.isLockedWithKey(pubKeyHash) {
-					UTXOs = append(UTXOs, out)
+					UTXOs[idx] = out
 				}
 			}
 		}
@@ -140,7 +144,7 @@ func (u UTXOSet) Reindex() {
 
 func (u UTXOSet) getAllAddressInfo() map[string]int {
 	db := u.Blockchain.db
-	UTOX := make(map[string]TxOutputs)
+	UTOX := make(map[string]TxOutputMap)
 	addressInfos := make(map[string]int)
 
 	db.View(func(tx *bolt.Tx) error {
@@ -149,14 +153,14 @@ func (u UTXOSet) getAllAddressInfo() map[string]int {
 		c := b.Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			txID := hex.EncodeToString(k)
-			txOutputs := DeserializeOutputs(v)
+			txOutputs := DeserializeTxOutputMap(v)
 			UTOX[txID] = txOutputs
 		}
 		return nil
 	})
 
 	for _, txOutputs := range UTOX {
-		for _, txOutput := range txOutputs.Outputs {
+		for _, txOutput := range txOutputs {
 			address := hex.EncodeToString(txOutput.PubKeyHash)
 
 			addressInfos[address] += txOutput.Value
@@ -164,6 +168,56 @@ func (u UTXOSet) getAllAddressInfo() map[string]int {
 	}
 
 	return addressInfos
+}
+
+func (u UTXOSet) getTotalValueOwnBy(publicKeyHash []byte) int {
+	db := u.Blockchain.db
+	totalValue := 0
+
+	db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(utxoBucket))
+
+		c := b.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			txOutputs := DeserializeTxOutputMap(v)
+			for _, output := range txOutputs {
+				if bytes.Compare(output.PubKeyHash, publicKeyHash) == 0 {
+					totalValue += output.Value
+				}
+			}
+		}
+		return nil
+	})
+
+	return totalValue
+}
+
+func (u UTXOSet) verifyTxInputs(txIns []TxInput) bool {
+	db := u.Blockchain.db
+	isValid := true
+
+	db.View(func(boltTx *bolt.Tx) error {
+		b := boltTx.Bucket([]byte(utxoBucket))
+
+		for _, vin := range txIns {
+			outsBytes := b.Get(vin.Txid)
+
+			if outsBytes != nil {
+				outs := DeserializeTxOutputMap(outsBytes)
+				if _, ok := outs[vin.TxOutIdx]; !ok {
+					isValid = false
+					return nil
+				}
+			} else {
+				isValid = false
+				return nil
+			}
+		}
+
+		return nil
+	})
+
+	return isValid
 }
 
 // Update updates the UTXO set with transactions from the Block
@@ -176,18 +230,18 @@ func (u UTXOSet) Update(block *Block) {
 
 		for _, tx := range block.Transactions {
 			if tx.isCoinbase() == false {
-				for _, vin := range tx.Vin {
-					updatedOuts := TxOutputs{}
+				for _, vin := range tx.TxIns {
+					updatedOuts := make(TxOutputMap)
 					outsBytes := b.Get(vin.Txid)
-					outs := DeserializeOutputs(outsBytes)
+					outs := DeserializeTxOutputMap(outsBytes)
 
-					for outIdx, out := range outs.Outputs {
+					for outIdx, out := range outs {
 						if outIdx != vin.TxOutIdx {
-							updatedOuts.Outputs = append(updatedOuts.Outputs, out)
+							updatedOuts[outIdx] = out
 						}
 					}
 
-					if len(updatedOuts.Outputs) == 0 {
+					if len(updatedOuts) == 0 {
 						err := b.Delete(vin.Txid)
 						if err != nil {
 							log.Panic(err)
@@ -202,9 +256,9 @@ func (u UTXOSet) Update(block *Block) {
 				}
 			}
 
-			newOutputs := TxOutputs{}
-			for _, out := range tx.Vout {
-				newOutputs.Outputs = append(newOutputs.Outputs, out)
+			newOutputs := make(TxOutputMap)
+			for idx, out := range tx.TxOuts {
+				newOutputs[idx] = out
 			}
 
 			err := b.Put(tx.ID, newOutputs.Serialize())

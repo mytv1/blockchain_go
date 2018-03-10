@@ -37,17 +37,15 @@ func (txOut TxOutput) String() string {
 	return str
 }
 
-// TxOutputs is a set of txoutput
-type TxOutputs struct {
-	Outputs []TxOutput
-}
+// TxOutputMap is map of TxOutput
+type TxOutputMap map[int]TxOutput
 
 // Serialize serialize txoutouts
-func (outs TxOutputs) Serialize() []byte {
+func (txOutputMap *TxOutputMap) Serialize() []byte {
 	var buff bytes.Buffer
 
 	enc := gob.NewEncoder(&buff)
-	err := enc.Encode(outs)
+	err := enc.Encode(txOutputMap)
 
 	if err != nil {
 		log.Panic(err)
@@ -56,15 +54,15 @@ func (outs TxOutputs) Serialize() []byte {
 	return buff.Bytes()
 }
 
-// DeserializeOutputs deserialize txoutouts
-func DeserializeOutputs(data []byte) TxOutputs {
-	var outputs TxOutputs
+// DeserializeTxOutputMap deserialize txoutouts
+func DeserializeTxOutputMap(data []byte) TxOutputMap {
+	var txOutputMap TxOutputMap
 
 	dec := gob.NewDecoder(bytes.NewReader(data))
-	err := dec.Decode(&outputs)
+	err := dec.Decode(&txOutputMap)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	return outputs
+	return txOutputMap
 }

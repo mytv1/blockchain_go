@@ -60,14 +60,14 @@ func initStartServerCLI(app *cli.App) {
 }
 
 func initTransactionCreatorCLI(app *cli.App) {
-	var toAddr string
+	var toAddr, exportFile string
 	var value int
 	app.Commands = append(app.Commands, cli.Command{
 		Name:    "createtransaction",
 		Aliases: []string{"ct"},
-		Usage:   " ct -to {address} -v {coin}",
+		Usage:   " ct -to {address} -v {coin} -f {file_to_export}",
 		Action: func(c *cli.Context) error {
-			execTransactionCreator(c, configPath, toAddr, value)
+			execTransactionCreator(c, configPath, toAddr, value, exportFile)
 			return nil
 		},
 		Flags: []cli.Flag{
@@ -78,6 +78,10 @@ func initTransactionCreatorCLI(app *cli.App) {
 			cli.IntFlag{
 				Name:        "v",
 				Destination: &value,
+			},
+			cli.StringFlag{
+				Name:        "f",
+				Destination: &exportFile,
 			},
 		},
 	})
@@ -110,7 +114,7 @@ func execStartCmd(c *cli.Context, configPath string) {
 	defer bc.db.Close()
 }
 
-func execTransactionCreator(c *cli.Context, configPath, toAddr string, value int) {
+func execTransactionCreator(c *cli.Context, configPath, toAddr string, value int, exportFile string) {
 	Info.Printf("Make transaction to send %d coins to address %s", value, toAddr)
 	initConfig(configPath)
 	wallet := getWallet()
@@ -120,6 +124,7 @@ func execTransactionCreator(c *cli.Context, configPath, toAddr string, value int
 		os.Exit(1)
 	}
 	transaction := bc.newTransaction(wallet, toAddr, value)
-	Info.Printf("%s", transaction)
+	m := createMsRequestAddTransaction(transaction)
+	m.export(exportFile)
 	defer bc.db.Close()
 }

@@ -2,13 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"os"
 	"strconv"
 )
 
 const (
-	// PING
-
 	// CmdSpreadHashList is used to spread hash list msg to other nodes
 	CmdSpreadHashList = "SPR_HL"
 
@@ -26,6 +25,8 @@ const (
 	CmdReqHeaderValidation = "REQ_BL_VAL"
 	// CmdReqPrintAllAddressInfo is used to request other node to valid a blocks hash list
 	CmdReqPrintAllAddressInfo = "REQ_ALL_ADDR"
+	// CmdReqAddTransaction is used to request other node to add a transaction
+	CmdReqAddTransaction = "REQ_ADD_TX"
 
 	// CmdResBestHeight is used to reponse with its own blockchain height
 	CmdResBestHeight = "RES_BH"
@@ -35,6 +36,8 @@ const (
 	CmdResHeaderValidation = "RES_BL_VAL"
 	// CmdResAddress is used to response CmdReqHeaderValidation
 	CmdResAddress = "RES_ADDR"
+	// CmdResAddTransaction is used to response CmdReqAddTransaction
+	CmdResAddTransaction = "RES_ADD_TX"
 )
 
 // Message is used to communicate between nodes
@@ -89,6 +92,13 @@ func createMsResponseAddress() *Message {
 	return m
 }
 
+func createMsRequestAddTransaction(tx *Transaction) *Message {
+	m := createBaseMessage()
+	m.Cmd = CmdReqAddTransaction
+	m.Data = tx.serialize()
+	return m
+}
+
 func createMsSpreadHashList(hashList [][]byte) *Message {
 	m := createBaseMessage()
 	m.Cmd = CmdSpreadHashList
@@ -115,6 +125,13 @@ func createMsResponseHeaderValidation(isValid bool) *Message {
 	return m
 }
 
+func createMsResponseAddTransaction(isSuccess bool) *Message {
+	m := createBaseMessage()
+	m.Cmd = CmdResAddTransaction
+	m.Data = []byte(strconv.FormatBool(isSuccess))
+	return m
+}
+
 func (m *Message) serialize() []byte {
 	data, err := json.Marshal(m)
 
@@ -135,4 +152,18 @@ func deserializeMessage(data []byte) *Message {
 	}
 
 	return m
+}
+
+func (m *Message) export(filePath string) {
+	prettyMarshal, e := json.MarshalIndent(m, "", "  ")
+	if e != nil {
+		Error.Println(e.Error())
+		os.Exit(1)
+	}
+
+	e = ioutil.WriteFile(filePath, prettyMarshal, 0644)
+	if e != nil {
+		Error.Println(e.Error())
+		os.Exit(1)
+	}
 }
