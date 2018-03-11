@@ -102,6 +102,7 @@ func handleReqAddTransaction(conn net.Conn, bc *Blockchain, m *Message) {
 		coinbaseTx := newCoinbaseTx(getWallet().Address)
 		newBlock := newBlock([]Transaction{*tx, *coinbaseTx}, bc.getTopBlockHash(), bc.getBestHeight()+1)
 		bc.addBlock(newBlock)
+		spreadHashList(bc)
 	} else {
 		Info.Printf("Transaction is invalid. Nothing happened.")
 	}

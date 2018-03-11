@@ -29,11 +29,17 @@ func newProofOfWork(b *Block) *ProofOfWork {
 }
 
 func (pow *ProofOfWork) prepareData(nonce int) []byte {
+	txAsBytes := []byte{}
+	for _, tx := range pow.block.Transactions {
+		txAsBytes = append(txAsBytes, tx.serialize()...)
+	}
+
 	data := bytes.Join(
 		[][]byte{
+			txAsBytes,
 			pow.block.Header.PrevBlockHash,
-			pow.block.hashTransactions(),
 			intToBytes(int(pow.block.Header.Timestamp)),
+			intToBytes(pow.block.Header.Height),
 			intToBytes(nonce),
 		},
 		[]byte{},
