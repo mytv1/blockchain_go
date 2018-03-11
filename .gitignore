@@ -1,3 +1,7 @@
 Dockerfile
 docker-compose.yml
+blockchain_go
 simplebc
+config.json
+bc.db
+.vscode

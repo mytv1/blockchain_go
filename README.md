@@ -4,10 +4,13 @@ My simple implement of blockchain with Golang.
 Fork from https://github.com/Jeiwan/blockchain_go
 (Many thanks to Jeiwan!)
 
-This is part 1 of my articles about my blockchain's implement tutorial below :
+This is part 5 of my articles about my blockchain's implement tutorial below :
 
 1. [Basic prototype](https://github.com/mytv1/blockchain_go/tree/part_1)
 2. [Network](https://github.com/mytv1/blockchain_go/tree/part_2)
+3. [Proof of work](https://github.com/mytv1/blockchain_go/tree/part_3)
+4. [Wallet + Address](https://github.com/mytv1/blockchain_go/tree/part_4)
+5. [Transaction](https://github.com/mytv1/blockchain_go/tree/part_5)
 
 I'm not good at English. So please tell me if there is something make you hard to understand.
 
@@ -37,51 +40,133 @@ go version go1.9.2 linux/amd64
 ```
 # Running
 ```
-make
-./simplebc
+$ make deps
+$ make build
+$ ./simplebc s
 ```
 
-# Structure
-Basic structure :
+## Running introduction for functions testing
+To make it works like a network, we need to run each node independently. For example, you can prepare a network environment with 3 nodes like this :
 
-### Block
+```shell
+$tree
+# directory structure #
+├── node_1
+│   ├── config.json
+│   ├── simplebc
+│   └── samples (optional)
+│       ├── print.json
+│       └── addblock.json
+├── node_2
+│   ├── config.json
+│   ├── simplebc
+│   └── samples (optional)
+│       ├── print.json
+│       └── addblock.json
+└── node_3
+    ├── config.json
+    ├── simplebc
+    └── samples (optional)
+        ├── print.json
+        └── addblock.json
+
 ```
-type Block struct {
-	Timestamp     int64
-	Data          []byte
-	Hash          []byte
-	PrevBlockHash []byte
+
+* simplebc : executed file. You can build it with `make build` above.
+* config.json : information about your network.
+* samples (optional) : contains commands to a node. You can send command to a node via tcp to request it to add a block, or print its own blockchain as you saw in part 1
+
+### Create a wallet
+```shell
+# node_1,2,3
+./simplebc cw
+# Copy printed wallets's info to below config.json
+```
+
+`config.json` of each node will look like below :
+
+```shell
+# configuration snippets #
+$ cat node_[123]/config.json
+{
+  "network": {
+    "local_node": {
+      "address": "localhost:3331"
+    },
+    "neighbor_nodes": [
+      {"address": "localhost:3332"},
+      {"address": "localhost:3333"}
+    ]
+  },
+  "wallet": {
+    "private_key": "d1ac80357c748483ac6952f09f56b1465bccfdb398262e774adfbfea7ee57331",
+    "public_key": "0490dcdf24d98bba9c0da3b56e4862fd38811e05a809deab0bb300761cc51615f0b2f05f46294ae6b313f08b6d074d900efb56f80ef8c3e131119b1e800e47c0fd",
+    "address": "1GiEnhrStofDdzyKpnDw7BpAcv3m9vacFv"
+  }
 }
+...
+  "network": {
+    "local_node": {
+      "address": "localhost:3331"
+    },
+    "neighbor_nodes": [
+      {"address": "localhost:3332"},
+      {"address": "localhost:3333"}
+    ]
+  },
+  "wallet": {
+    "private_key": "1b9205c8f84402cb32039de762e6ea541068ccbbb19e8b978b21a4e40197a92c",
+    "public_key": "04040d8408016f873529f9a99102a946a4d36de80360e4b57ada4afd6e06cf8a9ea399aacea0d18605bba464d2d888adbdc0b6b9dd94a4f7e50a98b94ed907b2ac",
+    "address": "1NYJwQd8YuR8kFHxs5WPRbuMtFQAyX4DEz"
+  }
+...
+  "network": {
+    "local_node": {
+      "address": "localhost:3331"
+    },
+    "neighbor_nodes": [
+      {"address": "localhost:3332"},
+      {"address": "localhost:3333"}
+    ]
+  },
+  "wallet": {
+    "private_key": "291c5925c8dffae53f8f8664222cf41553786520d4a4d4a98396a911e911a056",
+    "public_key": "04d1daffec2de150ab808200019d116ada5cb8942546a0e50d8a432080efa5deee3a9027267c2f5e93ef54d8a4948941c6a6cdf48aeee5b59be4f157e3f1ec2f43",
+    "address": "1PQE324cGzr9GnNDpmGMybLN16WusiYyF1"
+  }
 ```
 
-Block is the basic element of blockchain. In our example, I built it with basic properties.
-In practice, you can consider ethereum block structure [here](https://github.com/ethereum/go-ethereum/blob/master/core/types/block.go#L139)
+## Start network
 
-In my struct, we have :
-- Timestamp : timestamp when a block is created. I use `int64` because this type can be used to present Unix time.
+```shell
+# node_1
+./simplebc start
 
-- Data : for simple usage, its type may be `string` or anything else depend on our purposes. But with `[]byte`, we can handle it easily when we need encryption or json marshal.
+# node_2
+./simplebc start
 
-- Hash : We need a hash to "seal" this block. Hash is special mechanism in blockchain with many purposes : making difficulties to fake an unique block, "proof of work", easy validation... . We will mention it later. In our structure, hash is simple and just `sha256(Data + PrevBlockHash + Timestamp)`. About hash type,  i think `[]byte` is the most suitable, or we can consider `string`.
-
-- PrevBlockHash : Blockchain is a linked list of blocks. So each block will link to previous (created previously) block by saving a hash to it (its pointer in below diagram)
-![linked list](https://s3-eu-west-2.amazonaws.com/dotjsonimages/2017/06/ll-4.png)
-
-The first block has no pointer to its previous block, and is called **Genesis block**
-
-Notes: If you are wondering why we shouldn't add NextBlockHash (Seem like it will help us to iterate blocks easier, and blockchain will transform from singly linked list to doubly linked list), that's because of block's stability. As a block view,its previous block is stabler than its next one. With some special conditions, the next block has a higher possibility to be changed than the previous. In my opinion, we should save blockchain's block data as stable as possible.
-
-### Blockchain
-```
-type Blockchain struct {
-	blocks []*Block
-}
+# node_3
+./simplebc start
 ```
 
-Blockchain structure is just array of Blocks, very simple. And with our purpose, to make a simple blockchain simulation, I think it's enough. Though, we can see at least 2 problems here:
-+ Memory storage : Currently bitcoin blockchain size is about 150GB, and we don't want to save something that large to memory. In my opinion, we can save it to files (databases). We will mention later.
+## Create transaction
+```shell
+# Create transaction, node1
+./simplebc cw -to {address} -v {value} -f tx.json
+# Send transaction to node
+cat tx.json | nc localhost {port}
+```
 
-# References
+## Vardump blockchain
+```shell
+cat print.json | nc localhost {port}
+```
+
+## Print all address's value in blockchain
+```shell
+cat all_addr.json | nc localhost {port}
+```
+
+# Reference
 https://jeiwan.cc/posts/building-blockchain-in-go-part-1/
-
-
+https://github.com/DNAProject/DNA
