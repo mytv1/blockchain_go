@@ -98,7 +98,9 @@ func handleReqAddTransaction(conn net.Conn, bc *Blockchain, m *Message) {
 	isSuccess = bc.verifyTransaction(tx)
 	if isSuccess == true {
 		Info.Printf("Transaction is valid. Create new block.")
-		newBlock := newBlock([]Transaction{*tx}, bc.getTopBlockHash(), bc.getBestHeight()+1)
+		Info.Printf("Append coinbase transaction to address %s.", getWallet().Address)
+		coinbaseTx := newCoinbaseTx(getWallet().Address)
+		newBlock := newBlock([]Transaction{*tx, *coinbaseTx}, bc.getTopBlockHash(), bc.getBestHeight()+1)
 		bc.addBlock(newBlock)
 	} else {
 		Info.Printf("Transaction is invalid. Nothing happened.")

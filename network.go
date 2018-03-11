@@ -138,6 +138,7 @@ func pullBlockFromNeighbor(bc *Blockchain, node Node, blockIndex int) {
 	msAsBytes := scanner.Bytes()
 	msResponse := deserializeMessage(msAsBytes)
 	block := deserializeBlock(msResponse.Data)
+	// TODO : verify received blocks (transaction)
 	bc.addBlock(block)
 }
 
