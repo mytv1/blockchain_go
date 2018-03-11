@@ -16,12 +16,19 @@ I'm not good at English. So please tell me if there is something make you hard t
 
 I'm also new in Golang and Blockchain. So if you spot any problem in my code, please feel free to correct it.
 
+Demo : https://youtu.be/X8G33BZS3WY
+
+Describe by vietnamese:
+P1 : https://kipalog.com/posts/Xay-dung-blockchain-don-gian-voi-golang--P1---Cau-truc-co-ban
+P2 : https://kipalog.com/posts/Xay-dung-blockchain-don-gian-voi-golang--P2---CLI---Network
+P3 : https://kipalog.com/posts/Xay-dung-blockchain-don-gian-voi-golang--P3---Persistent---Proof-Of-Work
+P4 : https://kipalog.com/posts/Xay-dung-blockchain-don-gian-voi-golang--P4---Wallet--Address
+P5 : https://kipalog.com/posts/Xay-dung-blockchain-don-gian-voi-golang--P5----Transaction---UTOX-Set--Phan-cuoi
+
 # Contents
 - [Introduction](#introduction)
 - [Prerequisites](#prerequisites)
 - [Running](#running)
-- [Program Structure](#structure)
-- [References](#references)
 
 # Introduction
 In this article, we'll build a blockchain with a simple structure
