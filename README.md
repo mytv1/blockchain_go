@@ -114,10 +114,10 @@ $ cat node_[123]/config.json
 ...
   "network": {
     "local_node": {
-      "address": "localhost:3331"
+      "address": "localhost:3332"
     },
     "neighbor_nodes": [
-      {"address": "localhost:3332"},
+      {"address": "localhost:3331"},
       {"address": "localhost:3333"}
     ]
   },
@@ -129,11 +129,11 @@ $ cat node_[123]/config.json
 ...
   "network": {
     "local_node": {
-      "address": "localhost:3331"
+      "address": "localhost:3333"
     },
     "neighbor_nodes": [
-      {"address": "localhost:3332"},
-      {"address": "localhost:3333"}
+      {"address": "localhost:3331"},
+      {"address": "localhost:3332"}
     ]
   },
   "wallet": {
@@ -159,7 +159,7 @@ $ cat node_[123]/config.json
 ## Create transaction
 ```shell
 # Create transaction, node1
-./simplebc cw -to {address} -v {value} -f tx.json
+./simplebc ct -to {address} -v {value} -f tx.json
 # Send transaction to node
 cat tx.json | nc localhost {port}
 ```
